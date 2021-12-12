@@ -4,7 +4,7 @@ This repository provides a number of cut/paste reproducible tutorials for genera
 
 # Identity Access Management (IAM)
 - <a href="iam/verify-administrator-user.md">Verify AWS IAM Administrator User Setup</a>
-- <a hef="iam/create-iam-user.md">Create a new IAM User</a>
+- <a href="iam/create-iam-user.md">Create a new IAM User</a>
 
 # Elastic Compute Cloud (EC2)
 - <a href="ec2/create-rds-security-group.md">Create Security Group for RDS Aurora</a>
