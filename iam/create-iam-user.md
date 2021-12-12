@@ -58,3 +58,18 @@ The following configuration is used in this tutorial when creating RDS resources
     region=us-east-2
     output=json
     cli_pager=cat
+
+
+# References
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/create-group.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/attach-group-policy.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/list-attached-group-policies.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/list-users.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/create-user.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/add-user-to-group.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/list-groups-for-user.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/create-access-key.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/delete-access-key.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/remove-user-from-group.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/delete-user.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/delete-group.html
