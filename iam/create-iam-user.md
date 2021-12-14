@@ -1,6 +1,6 @@
 # Create a new IAM User
 
-This example assumes you have created an <a href="verify-administrator-user.md]">Administrator IAM user</a> for your AWS Account.
+This example assumes you have created an <a href="verify-administrator-user.md">Administrator IAM user</a> for your AWS Account.
 
 
     # Required Input parameters
@@ -44,7 +44,18 @@ You should be able to validate the new user and access credentials in a differen
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
 
-Access credentials should be added accordingly to necessary configuration for later usage. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a>.
+Access credentials should be added accordingly to necessary configuration for later usage. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a>. For adding this to <code>~/.aws/credentials</code>. This is one way to configure.
+
+    echo "
+    [${IAM_USER}]
+    aws_access_key_id=${AWS_ACCESS_KEY_ID}
+    aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
+
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
+    rm ~/${IAM_USER}.access.json
+    env | grep AW
+    aws sts get-caller-identity
 
 ## Example awscli configuration setup
 
@@ -58,6 +69,16 @@ The following configuration is used in this tutorial when creating RDS resources
     region=us-east-2
     output=json
     cli_pager=cat
+
+
+## Teardown
+
+    aws iam remove-user-from-group --user-name ${IAM_USER} --group-name ${IAM_GROUP}
+    # NOTE: You may have to redefine AWS_ACCESS_KEY_ID
+    aws iam delete-access-key --user-name ${IAM_USER} --access-key-id ${AWS_ACCESS_KEY_ID}
+    aws iam delete-user --user-name ${IAM_USER}
+    aws iam detach-group-policy --group-name ${IAM_GROUP} --policy-arn ${RDS_POLICY_ARN}
+    aws iam delete-group --group-name ${IAM_GROUP}
 
 
 # References

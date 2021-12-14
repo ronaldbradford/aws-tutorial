@@ -62,6 +62,9 @@ It is always a good practice to keep a clean infrastructure especially for testi
 
     aws ec2 terminate-instances --instance-ids ${INSTANCE_ID}
 
+    aws ec2 wait instance-terminated --instance-ids ${INSTANCE_ID}
+
+    # Interative waiting
     EXPECTED_STATUS="terminated"
     while : ; do
       STATUS=$(aws ec2 describe-instances --instance-ids ${INSTANCE_ID} --query '*[].Instances[].State.Name' --output text)

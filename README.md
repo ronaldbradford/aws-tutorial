@@ -1,14 +1,25 @@
 # AWS Tutorials
 
-This repository provides a number of cut/paste reproducible tutorials for general AWS usage.
+This repository provides several cut/paste reproducible tutorials to demonstrate AWS functionality using the AWS CLI.
+
+# Tutorial Pre-requisites
+
+- An AWS account. The <a href="https://aws.amazon.com/free/">Free 1 year</a> AWS account has sufficient free-tier services for these tutorials unless otherwise stated.
+- An IAM user that has the privilege to create new IAM users and groups. See <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html">Creating an IAM user in your AWS account</a>. For example these tutorials use the username <i>administrator</i>
+- The awscli. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html">Installing AWS CLI Version 2</a>.
+- The access credentials for this IAM user. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> for adding this to the <code>~/.aws/credentials</code>, e.g. a section called <i>[administrator]</i>.
+
 
 # Identity Access Management (IAM)
 - <a href="iam/verify-administrator-user.md">Verify AWS IAM Administrator User Setup</a>
 - <a href="iam/create-iam-user.md">Create a new IAM User</a>
+- <a href="iam/create-kms-policy-for-rds.md">Create a KMS policy for RDS CMKs</a>
 
 # Elastic Compute Cloud (EC2)
-- <a href="ec2/create-rds-security-group.md">Create Security Group for RDS Aurora</a>
-- <a href="create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance</a>
+- <a href="ec2/create-rds-security-group.md">Create  Security Group for RDS Aurora</a>
+- <a href="create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance for accessing created AWS resources in your VPC</a>
+
+# Key Management Service (KMS)
 
 # Relational Database Service (RDS)
 - <a href="rds/create-mysql-aurora-cluster.md">Create an RDS Aurora MySQL Cluster</a>
