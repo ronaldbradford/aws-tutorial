@@ -8,18 +8,19 @@ This repository provides several cut/paste reproducible tutorials to demonstrate
 - An IAM user that has the privilege to create new IAM users and groups. See <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html">Creating an IAM user in your AWS account</a>. For example these tutorials use the username <i>administrator</i>
 - The awscli. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html">Installing AWS CLI Version 2</a>.
 - The access credentials for this IAM user. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> for adding this to the <code>~/.aws/credentials</code>, e.g. a section called <i>[administrator]</i>.
-
+- A correctly configured VPC. See <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a>.
 
 # Identity Access Management (IAM)
 - <a href="iam/verify-administrator-user.md">Verify AWS IAM Administrator User Setup</a>
-- <a href="iam/create-iam-user.md">Create a new IAM User</a>
+- <a href="iam/create-iam-user.md">Create a new IAM User (With general RDS permissions)</a>
 - <a href="iam/create-kms-policy-for-rds.md">Create a KMS policy for RDS CMKs</a>
 
 # Elastic Compute Cloud (EC2)
 - <a href="ec2/create-rds-security-group.md">Create  Security Group for RDS Aurora</a>
-- <a href="create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance for accessing created AWS resources in your VPC</a>
+- <a href="ec2/create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance for accessing created AWS resources in your VPC</a>
 
 # Key Management Service (KMS)
+- <a href="kms/create-cmk-for-rds.md">Create Custom Managed Key (CMK) for RDS Clusters</a>
 
 # Relational Database Service (RDS)
 - <a href="rds/create-mysql-aurora-cluster.md">Create an RDS Aurora MySQL Cluster</a>

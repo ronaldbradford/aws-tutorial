@@ -1,29 +1,31 @@
 # Create an RDS Aurora MySQL Cluster
 
-This example will show the easiest way to create a MySQL RDS cluster. See [xxx] for a more robust setup.
+This example will show the easiest way to create a MySQL RDS cluster. A subsequent tutorial will provide a more robust setup.
 
 ## RDS Cluster Requirements
 
-An RDS cluster has a number of required AWS resources in order to be created. Some resources require additional IAM policy permissions than provided by `AmazonRDSFullAccess`.
+An RDS cluster has a number of required AWS resources in order to be created. Some of these resources require additional IAM policy permissions than provided by `AmazonRDSFullAccess`.
 
 <ul>
-<li>A VPC that has subnets.</li>
-<li>An EC2 security group that enables ingress (MySQL -3306, PostgreSQL - 5432) within your VPC. See the example <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a>.</li>
-<li>A DB Subnet Group based on applicable VPC subnets.</li>
-<li>A Cluster parameter group, AWS does provide a default.</li>
-<li>An instance parameter group, AWS does provide a default.</li>
-<li>A KMS Custom Managed Key (CMK), AWS does provide an RDS default KMS key.</li>
-<li>One or more RDS instances to access the cluster.</li>
+<li>A VPC that has subnets. See <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a>.</li>
+<li>An IAM user with privilege to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User<a></li>
+<li>An EC2 security group that enables ingress (MySQL -3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a> for how to create this in your AWS account.</li>
+<li>A DB Subnet Group based on applicable VPC subnets. Described in this tutorial.</li>
+<li>A Cluster parameter group, AWS does provide a default that is used in this tutorial.</li>
+<li>An instance parameter group, AWS does provide a default that is used in this tutorial.</li>
+<li>A KMS Custom Managed Key (CMK), AWS does provide an RDS default KMS key that is used in this tutorial.</li>
+<li>One or more RDS instances to access the cluster from a client. Described in this tutorial. </li>
+<li>An EC2 instance within the VPC. See the tutorial <a href="../ec2/create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance in your VPC</a>.
 </ul>
 
 
 
 While this example is designed to create an RDS cluster in the simplest way, some best practice decisions are made.
 
-- All data should be encrypted, by default a new RDS Aurora Cluster is not encrypted breaking the AWS Well-Architected Framework best practices for Security
-- While not required to specify an engine version, the default chooses the oldest version for the engine type, not the newest version, also not a best practice.
+- All data should be encrypted, by default a new RDS Aurora Cluster is not encrypted breaking the AWS Well-Architected Framework best practices for Security.
+- While not required to specify an engine version, the default chooses the oldest version for the engine type, not the newest version, also not a best practice for Security.
 
-PARAMETER_GROUP_FAMILY="${ENGINE}5.7"
+A subsequent tutorial will provide a number of better practices for creating an RDS cluster.
 
 
     # Connect to EC2 Instance inside of VPC
@@ -58,17 +60,18 @@ PARAMETER_GROUP_FAMILY="${ENGINE}5.7"
     # A more advanced --filter would include for example: Name=tag:tier,Values=db
     SUBNET_IDS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} | jq '.Subnets[].SubnetId' | tr '\n' ',' | sed -e "s/,\$"//)
 
-
+    # Create and RDS DB Subnet Group
     aws rds create-db-subnet-group \
         --db-subnet-group-name ${SUBNET_GROUP} \
         --db-subnet-group-description "Subnets for ${CLUSTER_ID}" \
         --subnet-ids "[${SUBNET_IDS}]"
     aws rds describe-db-subnet-groups  --db-subnet-group-name ${SUBNET_GROUP}
 
-
+    # Obtain the Security Group Id for the RDS created name
     SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=${SG_NAME} --query '*[].GroupId' --output text)
 
     # While the default is to create an unencrypted RDS Aurora cluster, this breaks the AWS Well-Architected Framework Security best practices.
+    # --storage-encrypted and --kms-key-id are used to improve data security at rest.
     aws rds create-db-cluster \
       --db-cluster-identifier ${CLUSTER_ID} \
       --vpc-security-group-ids ${SG_ID} \
@@ -90,7 +93,7 @@ PARAMETER_GROUP_FAMILY="${ENGINE}5.7"
       sleep 3
     done
 
-
+    # An RDS Cluster requries one or more instances to be able to access the cluster.
     aws rds create-db-instance \
       --db-cluster-identifier ${CLUSTER_ID} \
       --db-instance-identifier ${INSTANCE_ID} \
@@ -111,22 +114,28 @@ PARAMETER_GROUP_FAMILY="${ENGINE}5.7"
     # While the AWS Free tier provides for a t2.micro instance for RDS, this instance class is not supported for RDS Aurora
     aws rds describe-orderable-db-instance-options --engine ${ENGINE} --engine-version ${MYSQL_VERSION} --query '*[].DBInstanceClass' | grep db.t
 
-# Validation
+# Validation of your new RDS Cluster
 
 
+    # Each RDS Clusters has at least two endpoints, one endpoint that connects to the Writer instance,
+    # and one endpoint that connects in a round-robin to all Reader instances.  When there are no reader instances, this points to the Writer.
     CLUSTER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].Endpoint' --output text)
     CLUSTER_READER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].ReaderEndpoint' --output text)
+
+    # This will ensure our Security Group is correctly configured
     nc -vz ${CLUSTER_ENDPOINT} 3306
-    # This is an insecure means of connecting to mysql, passing the password on the command line
+
+    # This is an insecure means of connecting to mysql, passing the password on the command line. Used only for demostration purposes.
     docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
     docker run -it --rm mysql mysql -h${CLUSTER_READER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
+    # Each Instance within a cluster has an endpoint. While your application should use cluster endpoints, this endpoint is useful for monitoring
     INSTANCE_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].Endpoint.Address' --output text)
     docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
 # Next Steps
 
-<a href="mysql-aurora-cluster-common-commands.md">MySQL aurora cluster common commands</a> provides a number of common tasks you may use with a cluster.
+The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora cluster common commands</a> provides a number of common tasks you may use with a cluster.
 
 # Example Output
 
@@ -312,7 +321,7 @@ PARAMETER_GROUP_FAMILY="${ENGINE}5.7"
 
 # Troublshooting
 
-THe most common issue is the inability to connect to the cluster with the mysql client.  If `nc` fails, verify that the cluster has the correct security group and that security group has ingres from your current EC2 instances IP address.
+The most common issue is the inability to connect to the cluster with the mysql client.  If `nc` fails, verify that the cluster has the correct security group and that security group has ingress from your current EC2 instances IP address.
 
     CLUSTER_SG_ID=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].VpcSecurityGroups[].VpcSecurityGroupId' --output text)
     echo ${CLUSTER_SG_ID}
@@ -331,7 +340,6 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 
 
     aws rds delete-db-instance --db-instance-identifier ${INSTANCE_ID}
-
     aws rds wait db-instance-deleted --db-instance-identifier ${INSTANCE_ID}
 
     # While not advisable to skip the final snapshot when deleting a cluster, this has an incurred cost and for testing purposes we do not need this
