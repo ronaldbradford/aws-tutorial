@@ -1,36 +1,37 @@
 # Create an RDS Aurora MySQL Cluster
 
-This example will show the easiest way to create a MySQL RDS cluster. A subsequent tutorial will provide a more robust setup.
+This tutorial will demonstrate a way to create a simple MySQL RDS cluster. A subsequent tutorial will provide details for more robust cluster setup.
 
 ## RDS Cluster Requirements
 
-An RDS cluster has a number of required AWS resources in order to be created. Some of these resources require additional IAM policy permissions than provided by `AmazonRDSFullAccess`.
+An RDS cluster has a number of required AWS resources in order to be successfully created and accessed. Some of these resources require additional IAM policy permissions in addition to the AWS Managed policy by `AmazonRDSFullAccess` that is demonstrated in <a href="../iam/create-iam-user.md">this tutorial</a>.
 
 <ul>
-<li>A VPC that has subnets. See <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a>.</li>
-<li>An IAM user with privilege to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User<a></li>
-<li>An EC2 security group that enables ingress (MySQL -3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a> for how to create this in your AWS account.</li>
-<li>A DB Subnet Group based on applicable VPC subnets. Described in this tutorial.</li>
-<li>A Cluster parameter group, AWS does provide a default that is used in this tutorial.</li>
-<li>An instance parameter group, AWS does provide a default that is used in this tutorial.</li>
-<li>A KMS Custom Managed Key (CMK), AWS does provide an RDS default KMS key that is used in this tutorial.</li>
-<li>One or more RDS instances to access the cluster from a client. Described in this tutorial. </li>
-<li>An EC2 instance within the VPC. See the tutorial <a href="../ec2/create-an-assessible-instance.md">Create an Internet Accessible EC2 Instance in your VPC</a>.
+<li>A VPC that has correctly configured subnets. <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a> provide an example setup.</li>
+<li>An IAM user with applicable privileges to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User</a></li>
+<li>An EC2 security group that enables Aurora cluster ingress (MySQL - 3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a> for how to create this in your AWS account.</li>
+<li>A DB subnet group based on the applicable VPC subnets. Described in this tutorial.</li>
+<li>A cluster parameter group. AWS does provide a default that is used in this tutorial.</li>
+<li>An instance parameter group. AWS does provide a default that is used in this tutorial.</li>
+<li>A KMS Custom Managed Key (CMK). AWS does provide an RDS default KMS key that is used in this tutorial.</li>
+<li>One or more RDS instances to access the cluster from a suitable client. Described in this tutorial. </li>
+<li>An EC2 instance within the VPC to access the cluster. See the tutorial <a href="../ec2/create-an-assessible-instance.md">Create an Internet Accessible EC2 instance in your VPC</a> for the appropriate setup.
 </ul>
 
+## Minimal better practices
 
+While this example is designed to create an RDS cluster in the simplest way, some additional best practice decisions are made.
 
-While this example is designed to create an RDS cluster in the simplest way, some best practice decisions are made.
+- All data should always be encrypted. By default a new RDS Aurora cluster is not using encrypted storage which is does not match the AWS Well-Architected Framework best practices for security.
+- While not required to specify an engine version, the default version chosen is the oldest version for the engine type, not the most recent version. This is also not a best practice for security.
 
-- All data should be encrypted, by default a new RDS Aurora Cluster is not encrypted breaking the AWS Well-Architected Framework best practices for Security.
-- While not required to specify an engine version, the default chooses the oldest version for the engine type, not the newest version, also not a best practice for Security.
+A subsequent tutorial will provide a number of better practices for creating a more robust and extensible RDS cluster.
 
-A subsequent tutorial will provide a number of better practices for creating an RDS cluster.
-
+## IAM user validation
+It is possible to execute the setup of the RDS cluster from your local machine. You will not be able to perform the validation of and use the cluster. For simplicity all installation is performed on an instance that can complete the tutorial.
 
     # Connect to EC2 Instance inside of VPC
     ssh ${IP}
-
 
     # Validate IAM User
     export AWS_PROFILE=rdsdemo
@@ -38,11 +39,12 @@ A subsequent tutorial will provide a number of better practices for creating an 
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
 
+## Required configurable parameters
 
     # Necessary configuration to create an example RDS cluster
     ENGINE="aurora-mysql"
     MYSQL_VERSION="5.7.mysql_aurora.2.10.0" # Not required, but needed for Well-Architected Framework
-    INSTANCE_TYPE="db.t2.small"  # NOT Part of the AWS Free Tier
+    INSTANCE_TYPE="db.t2.small"  # THIS IS NOT part of the AWS Free Tier
     CLUSTER_ID="rds-aurora-mysql-demo"
     INSTANCE_ID="${CLUSTER_ID}-0"
 
@@ -53,21 +55,22 @@ A subsequent tutorial will provide a number of better practices for creating an 
     MYSQL_USER="dba"
     MYSQL_PASSWD=$(date |md5sum - | cut -c1-20)
 
-    # This simple example assumes one VPC
+    # This simple example assumes there is one VPC
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
 
     # This simple example assumes you have only one subnet per AZ for this VPC
     # A more advanced --filter would include for example: Name=tag:tier,Values=db
     SUBNET_IDS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} | jq '.Subnets[].SubnetId' | tr '\n' ',' | sed -e "s/,\$"//)
 
-    # Create and RDS DB Subnet Group
+## Setup
+    # Create an RDS DB Subnet Group
     aws rds create-db-subnet-group \
         --db-subnet-group-name ${SUBNET_GROUP} \
         --db-subnet-group-description "Subnets for ${CLUSTER_ID}" \
         --subnet-ids "[${SUBNET_IDS}]"
     aws rds describe-db-subnet-groups  --db-subnet-group-name ${SUBNET_GROUP}
 
-    # Obtain the Security Group Id for the RDS created name
+    # Obtain the Security Group Id for the RDS created security group name
     SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=${SG_NAME} --query '*[].GroupId' --output text)
 
     # While the default is to create an unencrypted RDS Aurora cluster, this breaks the AWS Well-Architected Framework Security best practices.
@@ -83,8 +86,7 @@ A subsequent tutorial will provide a number of better practices for creating an 
       --storage-encrypted \
       --kms-key-id ${KMS_KEY_ID}
 
-
-    # It is not possible to use the `aws rds wait` command for a cluster creation to proceed with subsequent statements
+    # It is not possible to use the `aws rds wait` command for a cluster creation to proceed with subsequent statements.
     EXPECTED_STATUS="available"
     while : ; do
       STATUS=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].Status' --output text)
@@ -102,7 +104,7 @@ A subsequent tutorial will provide a number of better practices for creating an 
 
     time aws rds wait db-instance-available --db-instance-identifier ${INSTANCE_ID}
 
-    # Alternative method similar to above example
+    # Alternative method to `rds wait` that is similar to above example
     EXPECTED_STATUS="available"
     while : ; do
       STATUS=$(aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].DBInstanceStatus' --output text)
@@ -111,21 +113,31 @@ A subsequent tutorial will provide a number of better practices for creating an 
       sleep 3
     done
 
-    # While the AWS Free tier provides for a t2.micro instance for RDS, this instance class is not supported for RDS Aurora
+## Warning
+While the AWS Free tier provides for a t2.micro instance for RDS, this instance class is not supported for RDS Aurora. You can see the list of valid bustable instance types for the MySQL version with:
+
     aws rds describe-orderable-db-instance-options --engine ${ENGINE} --engine-version ${MYSQL_VERSION} --query '*[].DBInstanceClass' | grep db.t
+
+For each MySQL version you will need to verify which instance types are supported. See <a href="mysql-aurora-major-upgrade.md">Aurora MySQL Major Upgrade</a> for example difference with this tutorial.
+
+## Tip
+New instance types are regularly added, for example the t4g instance type was just announced when this tutorial was created.
+
 
 # Validation of your new RDS Cluster
 
+Your RDS cluster will not be accessible from your local machine if you performed the setup. The tutorial <a href="../ec2/create-an-assessible-instance.md">Create an Internet Accessible EC2 instance in your VPC</a> provides an example of how to be ableo to connect to with a client program.
 
-    # Each RDS Clusters has at least two endpoints, one endpoint that connects to the Writer instance,
-    # and one endpoint that connects in a round-robin to all Reader instances.  When there are no reader instances, this points to the Writer.
+    # Each RDS Clusters has at least two endpoints, one endpoint that connects to the Writer instance
+    # and one reader endpoint that connects in a round-robin to all Reader instances.  
+    # When there are no reader instances, this points to the Writer.
     CLUSTER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].Endpoint' --output text)
     CLUSTER_READER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].ReaderEndpoint' --output text)
 
-    # This will ensure our Security Group is correctly configured
+    # This will ensure the security group(s) for the cluster is appropriately configured
     nc -vz ${CLUSTER_ENDPOINT} 3306
 
-    # This is an insecure means of connecting to mysql, passing the password on the command line. Used only for demostration purposes.
+    # This is an insecure means of connecting to MySQL by passing the password on the command line. Used only for cut/paste repeatable demonstration purposes.
     docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
     docker run -it --rm mysql mysql -h${CLUSTER_READER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
@@ -135,7 +147,7 @@ A subsequent tutorial will provide a number of better practices for creating an 
 
 # Next Steps
 
-The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora cluster common commands</a> provides a number of common tasks you may use with a cluster.
+The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora cluster common commands</a> provides a number of common tasks you may use with this cluster.
 
 # Example Output
 
@@ -200,7 +212,7 @@ The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora clus
               }
           ]
       }
-# rds describe-instances
+## rds describe-instances
     {
         "DBInstances": [
             {
@@ -298,7 +310,58 @@ The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora clus
         ]
     }
 
-# kms describe-key
+## rds describe-db-subnet-groups
+
+    {
+        "DBSubnetGroups": [
+            {
+                "DBSubnetGroupName": "rds-aurora-mysql-demo-sng",
+                "DBSubnetGroupDescription": "Subnets for rds-aurora-mysql-demo",
+                "VpcId": "vpc-c860b5a1",
+                "SubnetGroupStatus": "Complete",
+                "Subnets": [
+                    {
+                        "SubnetIdentifier": "subnet-f3b5139a",
+                        "SubnetAvailabilityZone": {
+                            "Name": "us-east-2a"
+                        },
+                        "SubnetOutpost": {},
+                        "SubnetStatus": "Active"
+                    },
+                    {
+                        "SubnetIdentifier": "subnet-0bb54170",
+                        "SubnetAvailabilityZone": {
+                            "Name": "us-east-2b"
+                        },
+                        "SubnetOutpost": {},
+                        "SubnetStatus": "Active"
+                    },
+                    {
+                        "SubnetIdentifier": "subnet-7aa0a830",
+                        "SubnetAvailabilityZone": {
+                            "Name": "us-east-2c"
+                        },
+                        "SubnetOutpost": {},
+                        "SubnetStatus": "Active"
+                    }
+                ],
+                "DBSubnetGroupArn": "arn:aws:rds:us-east-2:999999999999:subgrp:rds-aurora-mysql-demo-sng"
+            }
+        ]
+    }
+
+##  aws rds describe-orderable-db-instance-options
+
+    "db.t2.medium",
+    "db.t2.small",
+    "db.t3.large",
+    "db.t3.medium",
+    "db.t3.small",
+    "db.t4g.large",
+    "db.t4g.medium",
+
+## kms describe-key
+
       aws kms describe-key --key-id  alias/aws/rds
       {
           "KeyMetadata": {
@@ -383,6 +446,7 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 
 ## User Guide
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.DBInstanceClass.html
+- https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html
 
 ## Iaas
 - https://the.error.expert/amazon-web-services/awscli/rds/

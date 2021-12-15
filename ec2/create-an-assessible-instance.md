@@ -2,10 +2,14 @@
 
 In this example we will create an EC2 Instance accessible from your current Internet IPV4 address that can be used to create and manage RDS resources.
 
+## Required configurable parameters
+
     # Input Parameters
     KEYPAIR="rds"
     INSTANCE_TYPE="t2.micro"
     SG_NAME="ec2-rds-sg"    # See create-rds-security-group.md
+
+## Setup
 
     export AWS_PROFILE=administrator
     aws sts get-caller-identity
@@ -24,24 +28,25 @@ In this example we will create an EC2 Instance accessible from your current Inte
       ssh-keygen -f ${KEYPAIR_PRIVATE_KEY} -l
     fi
 
-    # This assumes a very simple single VPC setup with single subnets per AZ
+    # This assumes a single VPC setup with single subnets per AZ
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
     SUBNET_ID=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} --query '*[0].SubnetId' --output text)
     echo "REGION=${REGION},VPC_ID=${VPC_ID},SUBNET_ID=${SUBNET_ID},SG_ID=${SG_ID},SG_NAME=${SG_NAME},KEYPAIR=${KEYPAIR},LATEST_AMI=${LATEST_AMI}"
-    OUTPUT=$(aws ec2 run-instances --image-id ${LATEST_AMI} --instance-type ${INSTANCE_TYPE} --key-name ${KEYPAIR} --security-group-ids ${SG_ID} --subnet-id ${SUBNET_ID})
 
+    OUTPUT=$(aws ec2 run-instances --image-id ${LATEST_AMI} --instance-type ${INSTANCE_TYPE} --key-name ${KEYPAIR} --security-group-ids ${SG_ID} --subnet-id ${SUBNET_ID})
     jq . <<< ${OUTPUT}
     # Get Instance Id
     INSTANCE_ID=$(jq -r '.Instances[].InstanceId' <<< ${OUTPUT})
 
+    # Wait for the resources to be ready (this is a synchronous call)
     time aws ec2 wait instance-running --instance-ids ${INSTANCE_ID}
 
+    # Test access to new instance
     IP=$(aws ec2 describe-instances --instance-id ${INSTANCE_ID} --query '*[].Instances[0].NetworkInterfaces[].Association.PublicIp' --output text)
     nc -vz ${IP} 22
     ssh -i ${KEYPAIR_PRIVATE_KEY} -o "StrictHostKeyChecking=no" ec2-user@${IP} uptime
 
-
-## Setup
+## Additional Instance Setup
 
 The following is additional setup performed on the EC2 instance that is used for later tutorials.
 
@@ -52,6 +57,7 @@ The following is additional setup performed on the EC2 instance that is used for
     newgrp docker
 
     mkdir -p ${HOME}/.aws
+    # NOTE: Add your specific crendentials here
     echo "[rdsdemo] ..." > .aws/credentials
     export AWS_PROFILE=rdsdemo
     aws rds describe-db-clusters
@@ -62,10 +68,9 @@ The following is additional setup performed on the EC2 instance that is used for
 It is always a good practice to keep a clean infrastructure especially for testing purposes.
 
     aws ec2 terminate-instances --instance-ids ${INSTANCE_ID}
-
     aws ec2 wait instance-terminated --instance-ids ${INSTANCE_ID}
 
-    # Interative waiting
+    # Or interative waiting alternative to `ec2 wait`
     EXPECTED_STATUS="terminated"
     while : ; do
       STATUS=$(aws ec2 describe-instances --instance-ids ${INSTANCE_ID} --query '*[].Instances[].State.Name' --output text)

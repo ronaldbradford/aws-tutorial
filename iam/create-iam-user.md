@@ -93,6 +93,8 @@ The following commands will remove the IAM resources created in this tutorial, a
 
 
 # References
+
+## awscli
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/create-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/attach-group-policy.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/list-attached-group-policies.html
@@ -105,3 +107,9 @@ The following commands will remove the IAM resources created in this tutorial, a
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/remove-user-from-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/delete-user.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/delete-group.html
+
+## User Guide
+- https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
+- https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_rds_region.html
+- https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAM.html
+- https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.IAMPolicy.html
