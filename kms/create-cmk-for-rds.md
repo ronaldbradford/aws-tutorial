@@ -4,8 +4,12 @@ To manage your encrypted RDS Clusters within a Well-Architected Framework you sh
 Depending on your business requirements you may wish to separate certain data stores with different KMS keys.
 
 
+## Required configurable parameters
+
     # Required Variables
     RDS_KMS_ALIAS="alias/rds-cmk"
+
+## Setup
 
     OUTPUT=$(aws kms create-key --tags TagKey=Purpose,TagValue=RDS --description "RDS CMK")
     KMS_KEY_ID=$(jq .KeyMetaData.KeyId <<< ${OUTPUT})
@@ -34,6 +38,16 @@ Depending on your business requirements you may wish to separate certain data st
     }
 
 # References
+
+## awscli
+
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/kms/create-key.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/kms/create-alias.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/kms/enable-key-rotation.html
+
+## User Guide
+- https://docs.aws.amazon.com/kms/latest/developerguide/overview.html
+
+## IaaS
+- https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kms-key.html
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key

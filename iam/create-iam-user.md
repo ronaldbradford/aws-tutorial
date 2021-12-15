@@ -3,27 +3,30 @@
 This example assumes you have created an <a href="verify-administrator-user.md">Administrator IAM user</a> for your AWS Account.
 
 
+## Required configurable parameters
+
     # Required Input parameters
     IAM_USER="rdsdemo"
     IAM_GROUP="rds-group-access"
 
-    # Identify appropriate policy by `aws iam list-policies --scope AWS`
+    # Identify an appropriate policy by `aws iam list-policies --scope AWS`
     # In this example we are granting access manage RDS resources
     RDS_POLICY_ARN="arn:aws:iam::aws:policy/AmazonRDSFullAccess"
 
-
 ## IAM User and IAM Group Creation
 
+    # Ensure you are using an IAM user with the privilege to create and maintain IAM resources
     export AWS_PROFILE=administrator
     aws sts get-caller-identity
 
-    # Create new IAM group and attach applicable AWS Policies to perform desired activities
+    # Create a new IAM group and attach applicable AWS Policies to perform desired activities
+    # This group is used in later tutorials to extend capabilities for this user
     aws iam create-group --group-name ${IAM_GROUP}
     # The following command has no output
     aws iam attach-group-policy --group-name ${IAM_GROUP} --policy-arn ${RDS_POLICY_ARN}
     aws iam list-attached-group-policies --group-name ${IAM_GROUP}
 
-    # Create new IAM user belonging to the new IAM group
+    # Create a new IAM user belonging to the new IAM group
     aws iam list-users
     aws iam create-user --user-name ${IAM_USER}
     aws iam get-user --user-name ${IAM_USER}
@@ -35,7 +38,7 @@ This example assumes you have created an <a href="verify-administrator-user.md">
 
 ## Verification of new IAM user
 
-You should be able to validate the new user and access credentials in a different terminal window with
+You should be able to validate the new IAM user and the access credentials in a different terminal window with
 
     IAM_USER="rdsdemo"
     export AWS_ACCESS_KEY_ID=$(jq -r .AccessKey.AccessKeyId ~/${IAM_USER}.access.json)
@@ -44,22 +47,28 @@ You should be able to validate the new user and access credentials in a differen
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
 
-Access credentials should be added accordingly to necessary configuration for later usage. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a>. For adding this to <code>~/.aws/credentials</code>. This is one way to configure.
+The new IAM user access credentials should be added accordingly to a necessary configuration for later usage. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> provides information for adding this to <code>~/.aws/credentials</code>. 
+
+This is one approach to configure these settings
 
     echo "
     [${IAM_USER}]
     aws_access_key_id=${AWS_ACCESS_KEY_ID}
     aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
 
+    # Reset any current session settings
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     rm ~/${IAM_USER}.access.json
-    env | grep AW
+    env | grep AWS
+
+    # Test the new awscli profile
+    export AWS_PROFILE=${IAM_USER}
     aws sts get-caller-identity
 
 ## Example awscli configuration setup
 
-The following configuration is used in this tutorial when creating RDS resources.
+The following configuration is used in these tutorials when creating RDS resources.
 
     $ cat ~/.aws/credentials
 
@@ -73,8 +82,10 @@ The following configuration is used in this tutorial when creating RDS resources
 
 ## Teardown
 
+The following commands will remove the IAM resources created in this tutorial, allowing you to repeat and refine your setup steps.
+
     aws iam remove-user-from-group --user-name ${IAM_USER} --group-name ${IAM_GROUP}
-    # NOTE: You may have to redefine AWS_ACCESS_KEY_ID
+    # NOTE: You may have to redefine AWS_ACCESS_KEY_ID first
     aws iam delete-access-key --user-name ${IAM_USER} --access-key-id ${AWS_ACCESS_KEY_ID}
     aws iam delete-user --user-name ${IAM_USER}
     aws iam detach-group-policy --group-name ${IAM_GROUP} --policy-arn ${RDS_POLICY_ARN}
