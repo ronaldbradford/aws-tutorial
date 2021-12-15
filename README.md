@@ -24,8 +24,11 @@ This repository provides several cut/paste reproducible tutorials to demonstrate
 
 # Relational Database Service (RDS)
 - <a href="rds/create-mysql-aurora-cluster.md">Create an RDS Aurora MySQL Cluster</a>
-
-
+- <a href="rds/mysql-aurora-cluster-sample-commands.md">Aurora Cluster Sample Commands</a>
+  - <a href="mysql-aurora-logs.md">How to review your database logs</a>
+  - <a href="mysql-aurora-events.md">Monitor database events</a>
+  - <a href="mysql-aurora-minor-upgrade.md">How to perform a minor MySQL upgrade</a>
+  - <a href="mysql-aurora-major-upgrade.md">How to perform a major MySQL upgrade</a>
 
 
 

@@ -18,14 +18,13 @@ These commands work provided you have:
 - The access credentials for this IAM user. See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a>
 
 
-    $ cat ~/.aws/credentials
-
-    [administrator]
-    aws_access_key_id=XXXXXXXXXXXXXXXXX
-    aws_secret_access_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    region=us-east-2
-    output=json
-    cli_pager=cat
+      $ cat ~/.aws/credentials
+      [administrator]
+      aws_access_key_id=XXXXXXXXXXXXXXXXX
+      aws_secret_access_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      region=us-east-2
+      output=json
+      cli_pager=cat
 
 # Example Output
 

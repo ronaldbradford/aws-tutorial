@@ -52,7 +52,8 @@ The following is additional setup performed on the EC2 instance that is used for
     newgrp docker
 
     mkdir -p ${HOME}/.aws
-    echo "[]" > .aws/credentials
+    echo "[rdsdemo] ..." > .aws/credentials
+    export AWS_PROFILE=rdsdemo
     aws rds describe-db-clusters
 
 

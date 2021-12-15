@@ -41,7 +41,7 @@ A subsequent tutorial will provide a number of better practices for creating an 
 
     # Necessary configuration to create an example RDS cluster
     ENGINE="aurora-mysql"
-    MYSQL_VERSION="5.7.mysql_aurora.2.10.1" # Not required, but needed for Well-Architected Framework
+    MYSQL_VERSION="5.7.mysql_aurora.2.10.0" # Not required, but needed for Well-Architected Framework
     INSTANCE_TYPE="db.t2.small"  # NOT Part of the AWS Free Tier
     CLUSTER_ID="rds-aurora-mysql-demo"
     INSTANCE_ID="${CLUSTER_ID}-0"
