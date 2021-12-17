@@ -145,6 +145,14 @@ Your RDS cluster will not be accessible from your local machine if you performed
     INSTANCE_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].Endpoint.Address' --output text)
     docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
+## Example validation output
+
+    +-------------------------+------------------+-----------+-------------------+--------------------+
+    | @@aurora_server_id      | @@aurora_version | VERSION() | USER()            | @@innodb_read_only |
+    +-------------------------+------------------+-----------+-------------------+--------------------+
+    | rds-aurora-mysql-demo-0 | 2.10.0           | 5.7.12    | dba@172.31.39.139 |                  0 |
+    +-------------------------+------------------+-----------+-------------------+--------------------+
+
 # Next Steps
 
 The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora cluster common commands</a> provides a number of common tasks you may use with this cluster.

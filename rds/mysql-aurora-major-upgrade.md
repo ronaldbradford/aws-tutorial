@@ -6,7 +6,7 @@ With the most recent release of Aurora 3 (MySQL 8.0 compatibility) on <a href="h
 - Aurora 3.01.x is the publically available version that is compatible with MySQL 8.0.23. <a href="https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-23.html">MySQL Community 8.0.23 - 2021-01-18)</a>.
 - Aurora 2.07.x to 2.10.x is the version that is compatible with MySQL 5.7.12. <a href="https://dev.mysql.com/doc/relnotes/mysql/5.7/en/news-5-7-12.html">MySQL Community 5.7.12 - 2016-04-11)</a>
 
-In this tutorial we will demonstrate the steps for a simple environment that is using <a href="mysql-aurora-sample-data.md">mysql.com example data</a>.
+In this tutorial we will demonstrate the steps for a simple environment that is using <a href="mysql-sample-data.md">mysql.com example data</a>.
 
 In this first approach, there are two steps to the upgrade process.
 

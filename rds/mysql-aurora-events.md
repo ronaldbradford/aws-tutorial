@@ -3,7 +3,7 @@
 RDS Cluster, Instance and Cluster Snapshot events can be used to identify key changes that have occurred. This can be particularly useful in a failover situation.  
 
 
-The default window of recent events displayed is rather short. You can view up to 7 days of events.
+The default window of recent events displayed is rather short. You can view up to 14 days of events.
 An easy example is to look at all events since the creation of the resource, in this example the cluster.
 
     CREATED=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].ClusterCreateTime' --output text)
