@@ -45,7 +45,7 @@ The cluster and all instances are started with this command. You cannot start in
     aws rds describe-db-clusters --db-cluster-id ${CLUSTER_ID} --query '*[].Status' --output text                     
     aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].DBInstanceStatus' --output text
 
-## Example output
+# Example output
 
     Fri Dec 17 16:51:53 EST 2021 starting
     ...
@@ -58,6 +58,72 @@ The cluster and all instances are started with this command. You cannot start in
 
     $ aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].DBInstanceStatus' --output text
     available
+
+## rds describe-events
+
+    {
+        "Events": [
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo-0",
+                "SourceType": "db-instance",
+                "Message": "Recovery of the DB instance has started. Recovery time will vary with the amount of data to be recovered.",
+                "EventCategories": [
+                    "recovery"
+                ],
+                "Date": "2021-12-17T21:52:30.235000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:db:rds-aurora-mysql-demo-0"
+            },
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo-0",
+                "SourceType": "db-instance",
+                "Message": "Recovery of the DB instance has started. Recovery time will vary with the amount of data to be recovered.",
+                "EventCategories": [
+                    "recovery"
+                ],
+                "Date": "2021-12-17T21:53:00.451000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:db:rds-aurora-mysql-demo-0"
+            },
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo-0",
+                "SourceType": "db-instance",
+                "Message": "DB instance restarted",
+                "EventCategories": [
+                    "availability"
+                ],
+                "Date": "2021-12-17T21:57:07.052000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:db:rds-aurora-mysql-demo-0"
+            },
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo-0",
+                "SourceType": "db-instance",
+                "Message": "Recovery of the DB instance is complete.",
+                "EventCategories": [
+                    "recovery"
+                ],
+                "Date": "2021-12-17T21:57:30.515000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:db:rds-aurora-mysql-demo-0"
+            },
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo-0",
+                "SourceType": "db-instance",
+                "Message": "DB instance started",
+                "EventCategories": [
+                    "notification"
+                ],
+                "Date": "2021-12-17T21:58:24.663000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:db:rds-aurora-mysql-demo-0"
+            },
+            {
+                "SourceIdentifier": "rds-aurora-mysql-demo",
+                "SourceType": "db-cluster",
+                "Message": "DB cluster started",
+                "EventCategories": [
+                    "notification"
+                ],
+                "Date": "2021-12-17T22:01:12.355000+00:00",
+                "SourceArn": "arn:aws:rds:us-east-2:414340713341:cluster:rds-aurora-mysql-demo"
+            }
+        }    
 
 # References
 ## awscli

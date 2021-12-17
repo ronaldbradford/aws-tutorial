@@ -81,6 +81,42 @@
         }
     }
 
+# rds describe-events
+
+    $ aws rds describe-events
+
+    {
+        "SourceIdentifier": "first-snapshot",
+        "SourceType": "db-cluster-snapshot",
+        "Message": "Creating manual cluster snapshot",
+        "EventCategories": [
+            "backup"
+        ],
+        "Date": "2021-12-17T22:09:00.071000+00:00",
+        "SourceArn": "arn:aws:rds:us-east-2:414340713341:cluster-snapshot:first-snapshot"
+    },
+    {
+        "SourceIdentifier": "first-snapshot",
+        "SourceType": "db-cluster-snapshot",
+        "Message": "Manual cluster snapshot created",
+        "EventCategories": [
+            "backup"
+        ],
+        "Date": "2021-12-17T22:12:33.695000+00:00",
+        "SourceArn": "arn:aws:rds:us-east-2:414340713341:cluster-snapshot:first-snapshot"
+    },
+    {
+        "SourceIdentifier": "first-snapshot",
+        "SourceType": "db-cluster-snapshot",
+        "Message": "Deleted manual snapshot",
+        "EventCategories": [
+            "deletion"
+        ],
+        "Date": "2021-12-17T22:19:35.957000+00:00",
+        "SourceArn": "arn:aws:rds:us-east-2:414340713341:cluster-snapshot:first-snapshot"
+    }
+
+
 # Teardown
 
 RDS Snaphots have a cost for storage. It is unclear if the AWS Free tier offers any snapshots at no cost.
