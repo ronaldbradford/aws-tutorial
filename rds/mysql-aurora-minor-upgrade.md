@@ -62,7 +62,7 @@ As with several other tutorials, an interactive display of state change (e.g. st
     docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
 
-### Example Output    
+### Example output    
     5.7.mysql_aurora.2.10.1
 
     +-------------------------+------------------+-----------+-------------------+--------------------+
@@ -77,7 +77,7 @@ You will also have a number of <a href="mysql-aurora-events.md">Events</a> durin
     aws rds describe-events --source-type db-cluster --source-identifier ${CLUSTER_ID}
     aws rds describe-events --source-type db-instance --source-identifier ${INSTANCE_ID}
 
-# Example Output
+# Example output
 
 ## rds decribe-events
     $ aws rds describe-events --source-type db-cluster --source-identifier ${CLUSTER_ID}

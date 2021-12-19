@@ -3,56 +3,83 @@
 With the most recent release of Aurora 3 (MySQL 8.0 compatibility) on <a href="https://aws.amazon.com/blogs/database/amazon-aurora-mysql-3-with-mysql-8-0-compatibility-is-now-generally-available/">18 NOV 2021</a> this major upgrade has been significantly streamlined.  In a subsequent tutorial I will demonstrate the upgrade process for Aurora PostgreSQL.
 
 
-- Aurora 3.01.x is the publically available version that is compatible with MySQL 8.0.23. <a href="https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-23.html">MySQL Community 8.0.23 - 2021-01-18)</a>.
-- Aurora 2.07.x to 2.10.x is the version that is compatible with MySQL 5.7.12. <a href="https://dev.mysql.com/doc/relnotes/mysql/5.7/en/news-5-7-12.html">MySQL Community 5.7.12 - 2016-04-11)</a>
+- Aurora 3.01.x is the publically available version that is compatible with MySQL 8.0.23. See <a href="https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-23.html">MySQL Community 8.0.23 - 2021-01-1 Release Notes</a>.
+- Aurora 2.07.x to 2.10.x is the version that is compatible with MySQL 5.7.12. <a href="https://dev.mysql.com/doc/relnotes/mysql/5.7/en/news-5-7-12.html">See MySQL Community 5.7.12 - 2016-04-11 Release Notes</a>.
 
-In this tutorial we will demonstrate the steps for a simple environment that is using <a href="mysql-sample-data.md">mysql.com example data</a>.
+In this tutorial we will demonstrate the easiest path for a simple environment that is using <a href="mysql-sample-data.md">mysql.com example data</a>.  NOTE: While any software upgrade process requires detailed planning, evaluation, documented processes and rollback plans, this tutorial is an introduction of the steps to perform a upgrade on a demo cluster.
 
 In this first approach, there are two steps to the upgrade process.
 
 - Create a snapshot of your Aurora 2.x
 - Restore the snapshot into an Aurora 3.x cluster
 
-# Snapshot
+NOTE: This will not be the only steps used in a migration of an operational Aurora Cluster. This is for demonstration puroses only.
+
+# Create a demo Aurora MySQL cluster
+
+See the tutorial <a href="create-mysql-aurora-cluster">Create an RDS Aurora MySQL Cluster</a> to get started. For this upgrade we will use the <a href="mysql-sample-data.md">mysql.com example databases</a> as sample data.
+
+## Required parameters
+
+     # Variables from create tutorial
+     CLUSTER_ID="rds-aurora-mysql-demo"
+     ENGINE="aurora-mysql"
+     SG_NAME="rds-aurora-sg"
+     SG_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=${SG_NAME} --query '*[].GroupId' --output text)
+
+     # New variables for this upgrade
+     SNAPSHOT_ID="before-major-upgrade"
+     NEW_CLUSTER_ID="${CLUSTER_ID}-upgraded"
+     NEW_INSTANCE_ID=$"INSTANCE_ID}-upgraded"
+     NEW_INSTANCE_TYPE="db.t4g.medium"
+     NEW_MYSQL_VERSION="8.0.mysql_aurora.3.01.0"
+
+
+
+# Create a snapshot
 
 As demonstrated in <a href="mysql-aurora-snapshot.md">Creating an Aurora snapshot</a> tutorial.
 
-    SNAPSHOT_ID="before-major-upgrade"
     aws rds create-db-cluster-snapshot --db-cluster-identifier ${CLUSTER_ID} --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
     aws rds wait db-cluster-snapshot-available --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
-
-    # Alternative interactive feedback
-    EXPECTED_STATUS="available"
-    while : ; do
-      STATUS=$(aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID} --query '*[].Status' --output text; exit $?)
-      [ $? -ne 0 ] && break
-      echo $(date) ${STATUS}
-      [ "${STATUS}" = "${EXPECTED_STATUS}" ] && break
-      sleep 3
-    done
-
     aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
 
+```
+# Alternative interactive feedback to `wait`
+EXPECTED_STATUS="available"
+while : ; do
+  STATUS=$(aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID} --query '*[].Status' --output text; exit $?)
+  [ $? -ne 0 ] && break
+  echo $(date) ${STATUS}
+  [ "${STATUS}" = "${EXPECTED_STATUS}" ] && break
+  sleep 3
+done
+```
 
-# Restore snapshot to a new Cluster
 
-      NEW_MYSQL_VERSION="8.0.mysql_aurora.3.01.0"
+# Restore snapshot to a new cluster
+
+In this upgrade approach we will not change the existing cluster, rather create a new cluster with the intended version.
+
       aws rds restore-db-cluster-from-snapshot \
-          --db-cluster-identifier ${CLUSTER_ID}-upgraded \
+          --db-cluster-identifier ${NEW_CLUSTER_ID} \
           --snapshot-identifier ${SNAPSHOT_ID} \
           --vpc-security-group-ids ${SG_ID} \    # Important Requirement
           --engine ${ENGINE} \
           --engine-version ${NEW_MYSQL_VERSION}
 
+      # There is no applicable `wait` option to hold until completion.
       EXPECTED_STATUS="available"
       while : ; do
-        STATUS=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID}-upgraded --query '*[].Status' --output text)
+        STATUS=$(aws rds describe-db-clusters --db-cluster-identifier ${NEW_CLUSTER_ID} --query '*[].Status' --output text)
         echo $(date) ${STATUS}
         [ "${STATUS}" = "${EXPECTED_STATUS}" ] && break
         sleep 3
       done
 
-## Example Logging Output
+## Example logging output
+
+You can see in this example it took approximately 4 minutes to create the cluster.
 
       Tue Dec 14 21:34:14 UTC 2021 creating
       ...
@@ -61,14 +88,18 @@ As demonstrated in <a href="mysql-aurora-snapshot.md">Creating an Aurora snapsho
 
 # Create new instances for upgraded cluster
 
-    NEW_INSTANCE_TYPE="db.t4g.medium"
+An Aurora cluster has no use case without having one or more cluster instances. This will create an instance for the new cluster.
+
     # An RDS Cluster requries one or more instances to be able to access the cluster.
     aws rds create-db-instance \
-      --db-cluster-identifier ${CLUSTER_ID}-upgraded \
-      --db-instance-identifier ${INSTANCE_ID}-upgraded \
+      --db-cluster-identifier ${NEW_CLUSTER_ID} \
+      --db-instance-identifier ${NEW_INSTANCE_ID} \
       --db-instance-class ${NEW_INSTANCE_TYPE} \
       --engine ${ENGINE} \
       --engine-version ${NEW_MYSQL_VERSION}
+
+    time aws rds wait db-instance-available --db-instance-identifier ${NEW_INSTANCE_ID}
+
 
 ## Example Logging Output
 
@@ -79,11 +110,14 @@ As demonstrated in <a href="mysql-aurora-snapshot.md">Creating an Aurora snapsho
 
 ## WARNING
 
-The smallest instance type used for Aurora MySQL 5.7 is not valid with Aurora MySQL 8.0
+The smallest instance type `db.t2.small` used for Aurora MySQL 5.7 Cluster is not valid with an Aurora MySQL 8.0 Cluster.
 
     An error occurred (InvalidParameterCombination) when calling the CreateDBInstance operation: RDS does not support creating a DB instance with the following combination: DBInstanceClass=db.t2.small, Engine=aurora-mysql, EngineVersion=8.0.mysql_aurora.3.01.0, LicenseModel=general-public-license. For supported combinations of instance class and database engine version, see the documentation.
 
-## Supported bustable instance types for Aurora MySQL 8
+## Supported bustable instance types for Aurora MySQL 8.0
+
+You can find the list of supported instance classes in your region with:
+
     aws rds describe-orderable-db-instance-options --engine ${ENGINE} --engine-version ${NEW_MYSQL_VERSION} --query '*[].DBInstanceClass' | grep db.t
         "db.t3.large",
         "db.t3.medium",
@@ -91,22 +125,28 @@ The smallest instance type used for Aurora MySQL 5.7 is not valid with Aurora My
         "db.t4g.medium",
 
 
-# Sanity validation of version
+# Sanity validation of new version following upgrade
 
-    NEW_CLUSTER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID}-upgraded --query '*[].Endpoint' --output text)
-    echo $NEW_CLUSTER_ENDPOINT
+
+    NEW_CLUSTER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${NEW_CLUSTER_ID} --query '*[].Endpoint' --output text)
     nc -vz ${NEW_CLUSTER_ENDPOINT} 3306
     docker run -it --rm mysql mysql -h${NEW_CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
-    mysql: [Warning] Using a password on the command line interface can be insecure.
+
+
+### Example output
     +----------------------------------+------------------+-----------+-------------------+--------------------+
     | @@aurora_server_id               | @@aurora_version | VERSION() | USER()            | @@innodb_read_only |
     +----------------------------------+------------------+-----------+-------------------+--------------------+
     | rds-aurora-mysql-demo-0-upgraded | 3.01.0           | 8.0.23    | dba@172.31.39.139 |                  0 |
     +----------------------------------+------------------+-----------+-------------------+--------------------+
 
+As you can see the Aurora Version is 3.x, and the MySQL version is 8.0.x.
+
 # Simple data evaluation
 
-    mysql> SELECT Name, Population FROM city ORDER BY Population DESC LIMIT 10;
+Having added  <a href="mysql-sample-data.md">mysql.com example databases</a> as sample data to your original cluster, some simple checks confirm the database is accessible.
+
+    mysql> SELECT Name, Population FROM world.city ORDER BY Population DESC LIMIT 10;
     +------------------+------------+
     | Name             | Population |
     +------------------+------------+
@@ -123,7 +163,7 @@ The smallest instance type used for Aurora MySQL 5.7 is not valid with Aurora My
     +------------------+------------+
     10 rows in set (0.03 sec)
 
-    mysql> SELECT District, SUM(Population) FROM city WHERE CountryCode = 'USA' GROUP BY District HAVING SUM(Population) > 3000000;
+    mysql> SELECT District, SUM(Population) FROM world.ity WHERE CountryCode = 'USA' GROUP BY District HAVING SUM(Population) > 3000000;
     +------------+-----------------+
     | District   | SUM(Population) |
     +------------+-----------------+
@@ -139,9 +179,12 @@ The smallest instance type used for Aurora MySQL 5.7 is not valid with Aurora My
 
 # Additional logs
 
-If your upgrade fails, commonly observed when your instance has a status of `incompatible-parameters` you will find some detailed information in the additional log file `upgrade-prechecks.log`.
+If your upgrade fails, commonly observed when your instance is left with a status of `incompatible-parameters` you will find some detailed information in the additional log file `upgrade-prechecks.log`.
 
-    aws rds describe-db-log-files --db-instance-identifier ${INSTANCE_ID}-upgraded
+    aws rds describe-db-log-files --db-instance-identifier ${NEW_INSTANCE_ID}
+
+```
+    ....
     {
        "DescribeDBLogFiles": [
            ...
@@ -152,10 +195,12 @@ If your upgrade fails, commonly observed when your instance has a status of `inc
            }
        ]
     }
+```
+Even in the simplest of data examples use the <a href="mysql-aurora-sample-data.md">mysql.com sample databases</a>, you can find a number of warning messages that are applicable to show how this log is important.
 
-Even in the simplest of data examples with <a href="mysql-aurora-sample-data.md">mysql.com sample databases</a>, you can find a number of warning messages that are applicable.
+    aws rds download-db-log-file-portion --db-instance-identifier ${NEW_INSTANCE_ID} --log-file-name upgrade-prechecks.log --output text
 
-    aws rds download-db-log-file-portion --db-instance-identifier ${INSTANCE_ID}-upgraded --log-file-name upgrade-prechecks.log --output text
+```    
     {
         "serverAddress": "/tmp%2Fmysql.sock",
         "serverVersion": "5.7.12",
@@ -436,14 +481,18 @@ Even in the simplest of data examples with <a href="mysql-aurora-sample-data.md"
         "noticeCount": 12,
         "Summary": "No fatal errors were found that would prevent an upgrade, but some potential issues were detected. Please ensure that the reported issues are not significant before upgrading."
     }
+```
 
-# Detailed preparation
-This tutorial jumped into the minimum required to show a suitable workflow for a major upgrade. It is recommended that you also use two compatibility checks available with MySQL software.
+# More detailed upgrade preparation
+
+This tutorial jumped into the minimum required steps to show a suitable workflow for a major upgrade to an Aurora MySQL cluster. It is recommended that you also use these two compatibility checks available with MySQL community version before upgrading.
 
 ## mysqlcheck
 
-    docker run -it --rm mysql mysqlcheck -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} --all-databases --check-upgrade
-    mysqlcheck: [Warning] Using a password on the command line interface can be insecure.
+```
+docker run -it --rm mysql mysqlcheck -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} --all-databases --check-upgrade
+```
+
     mysql.aurora_s3_load_history                       OK
     mysql.bin_log_md_table                             OK
     mysql.bin_log_table                                OK
@@ -520,10 +569,17 @@ This tutorial jumped into the minimum required to show a suitable workflow for a
 
 With this more detailed evaluation with the MySQL shell you can see were information found in the prechecks log is being sourced.
 
-    docker run -it --rm --name mysql8 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -d mysql/mysql-server
-    docker exec -it mysql8 /bin/bash
+```
+    # -e "CLUSTER_ENDPOINT=${CLUSTER_ENDPOINT}" "MYSQL_USER=${MYSQL_USER}"  
 
-    # mysqlsh --js -h<value> -udba -p
+    docker run --name mysql8 -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" -d mysql/mysql-server
+    docker exec -it mysql8  /bin/bash
+
+    mysqlsh --js -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p -e "util.checkForServerUpgrade()"
+
+    docker stop mysql8 && docker rm mysql8
+```
+
     Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
     MySQL Shell 8.0.27
 
@@ -679,7 +735,7 @@ With this more detailed evaluation with the MySQL shell you can see were informa
 
 ## Benchmarking
 
-As with any upgrade, you should have a known set of test cases that perform query analysis, timing and benchmarking to ensure any new version does not introduce a regression.  This can be particularly relevant when SQL hints are used extensively to hone the Query Optimizer into preference Query Execution Plans (QEP).
+As with any upgrade, you should have a known set of test cases that perform query analysis, timing and benchmarking to ensure any new version does not introduce a regression.  This can be particularly relevant when SQL hints are used extensively to hone the query optimizer into preferred indexex in the Query Execution Plans (QEP).
 
 # References
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.MySQL80.html
