@@ -1,10 +1,18 @@
 # Create an Aurora Snapshot
 
+## Required parameters
+    CLUSTER_ID="rds-aurora-mysql-demo"
     SNAPSHOT_ID="first-snapshot"
+
+## Perform a snapshot
+
+    export AWS_PROFILE=rdsdemo
+
     aws rds create-db-cluster-snapshot --db-cluster-identifier ${CLUSTER_ID} --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
     aws rds wait db-cluster-snapshot-available --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
+    aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
 
-    # Alternative interactive feedback
+    # Alternative interactive feedback to `wait`
     EXPECTED_STATUS="available"
     while : ; do
       STATUS=$(aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID} --query '*[].Status' --output text; exit $?)
@@ -14,7 +22,6 @@
       sleep 3
     done
 
-    aws rds describe-db-cluster-snapshots --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
 
 # Example Output
 
@@ -119,12 +126,17 @@
 
 # Teardown
 
-RDS Snaphots have a cost for storage. It is unclear if the AWS Free tier offers any snapshots at no cost.
+RDS Snaphots have a cost for the storage of your data. It is unclear if the AWS Free tier offers any snapshots at no cost. For these example tutorials it is a good practice to cleanup your tested snapshot.
 
     aws rds delete-db-cluster-snapshot --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
 
+# Errors
 
-#References
+ An error occurred (SnapshotQuotaExceeded) when calling operation: Cannot create more than 100 manual snapshots
+
+Errors never happen when you would like them to. For example, when trying to <a hef="https://the.error.expert/amazon-web-services/awscli/rds/delete-db-cluster/rds-snapquotaexceeded-deletedbcluster-manual-snapshots.html">Delete a Cluster</a>.
+
+# References
 
 ## awscli
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster-snapshot.html

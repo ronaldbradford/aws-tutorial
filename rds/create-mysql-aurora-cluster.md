@@ -7,7 +7,7 @@ This tutorial will demonstrate a way to create a simple MySQL RDS cluster. A sub
 An RDS cluster has a number of required AWS resources in order to be successfully created and accessed. Some of these resources require additional IAM policy permissions in addition to the AWS Managed policy by `AmazonRDSFullAccess` that is demonstrated in <a href="../iam/create-iam-user.md">this tutorial</a>.
 
 <ul>
-<li>A VPC that has correctly configured subnets. <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a> provide an example setup.</li>
+<li>A VPC that has correctly configured subnets. <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a> provides an example setup.</li>
 <li>An IAM user with applicable privileges to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User</a></li>
 <li>An EC2 security group that enables Aurora cluster ingress (MySQL - 3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a> for how to create this in your AWS account.</li>
 <li>A DB subnet group based on the applicable VPC subnets. Described in this tutorial.</li>
@@ -431,13 +431,15 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 
 ## awscli
 
-- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-subnet-groups.html
-- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-subnet-groups.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-subnet-group.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-subnet-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster-parameter-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-parameter-group.html
 
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-clusters.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-instances.html
 
 - https://docs.aws.amazon.com/cli/latest/reference/rds/wait/index.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-orderable-db-instance-options.html
@@ -455,6 +457,7 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 ## User Guide
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.DBInstanceClass.html
 - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html
+- https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.CreateVPC.html
 
 ## Iaas
 - https://the.error.expert/amazon-web-services/awscli/rds/
