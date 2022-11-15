@@ -1,12 +1,13 @@
 # Create an Aurora Snapshot
 
 ## Required parameters
-    CLUSTER_ID="rds-aurora-mysql-demo"
+    AWS_PROFILE=rdsdemo
+    ENGINE="aurora-mysql" # or aurora-postgresql
+    CLUSTER_ID="rds-${ENGINE}-demo"
     SNAPSHOT_ID="first-snapshot"
 
 ## Perform a snapshot
 
-    export AWS_PROFILE=rdsdemo
 
     aws rds create-db-cluster-snapshot --db-cluster-identifier ${CLUSTER_ID} --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
     aws rds wait db-cluster-snapshot-available --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
@@ -88,7 +89,7 @@
         }
     }
 
-# rds describe-events
+## rds describe-events
 
     $ aws rds describe-events
 
