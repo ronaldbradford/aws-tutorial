@@ -34,7 +34,7 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
     ssh ${IP}
 
     # Validate IAM User
-    export AWS_PROFILE=rdsdemo
+    export AWS_PROFILE="rdsdemo"
     aws sts get-caller-identity
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
@@ -46,17 +46,18 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
 
     # Look at possible versions for engine
     aws rds describe-db-engine-versions --engine ${ENGINE} --query '*[].EngineVersion' --output text
-    MYSQL_VERSION=$(aws rds describe-db-engine-versions --engine ${ENGINE} --query '*[].EngineVersion' --output text | awk '{print $NF}') # Not required, but needed for Well-Architected Framework
-    INSTANCE_TYPE="db.t2.small"  # THIS IS NOT part of the AWS Free Tier
-    CLUSTER_ID="rds-aurora-mysql-demo"
+    ENGINE_VERSION=$(aws rds describe-db-engine-versions --engine ${ENGINE} --query '*[].EngineVersion' --output text | awk '{print $NF}') # Not required, but needed for Well-Architected Framework
+    INSTANCE_TYPE="db.t3.medium"  # THIS IS NOT part of the AWS Free Tier
+    CLUSTER_ID="rds-${ENGINE}-demo"
     INSTANCE_ID="${CLUSTER_ID}-0"
 
     SUBNET_GROUP="${CLUSTER_ID}-sng"
     SG_NAME="rds-aurora-sg"
     KMS_KEY_ID="alias/aws/rds"  # Not required, but needed for Well-Architected Framework
 
-    MYSQL_USER="dba"
-    MYSQL_PASSWD=$(date |md5sum - | cut -c1-20)
+    DBA_USER="dba"
+    DBA_PASSWD=$(date |md5sum - | cut -c1-20)
+    echo "${DBA_PASSWD}"
 
     # This simple example assumes there is one VPC
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
@@ -64,6 +65,7 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
     # This simple example assumes you have only one subnet per AZ for this VPC
     # A more advanced --filter would include for example: Name=tag:tier,Values=db
     SUBNET_IDS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} | jq '.Subnets[].SubnetId' | tr '\n' ',' | sed -e "s/,\$"//)
+    echo ${VPC_ID},${SUBNET_IDS}
 
 ## Setup
     # Create an RDS DB Subnet Group
@@ -83,9 +85,9 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
       --vpc-security-group-ids ${SG_ID} \
       --db-subnet-group-name ${SUBNET_GROUP}  \
       --engine ${ENGINE} \
-      --engine-version ${MYSQL_VERSION} \
-      --master-username ${MYSQL_USER} \
-      --master-user-password ${MYSQL_PASSWD} \
+      --engine-version ${ENGINE_VERSION} \
+      --master-username ${DBA_USER} \
+      --master-user-password ${DBA_PASSWD} \
       --storage-encrypted \
       --kms-key-id ${KMS_KEY_ID}
 
@@ -98,7 +100,7 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
       sleep 3
     done
 
-    # An RDS Cluster requries one or more instances to be able to access the cluster.
+    # An RDS Cluster requires one or more instances to be able to access the cluster.
     aws rds create-db-instance \
       --db-cluster-identifier ${CLUSTER_ID} \
       --db-instance-identifier ${INSTANCE_ID} \
@@ -117,7 +119,7 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
     done
 
 ## Warning
-While the AWS Free tier provides for a t2.micro instance for RDS, this instance class is not supported for RDS Aurora. You can see the list of valid bustable instance types for the MySQL version with:
+While the AWS Free tier provides for a t2.micro instance for RDS, this instance class is not supported for RDS Aurora. You can see the list of valid <a href="https://aws.amazon.com/ec2/instance-types/t3/">burstable t3 instance types</a> for the Aurora MySQL version with:
 
     aws rds describe-orderable-db-instance-options --engine ${ENGINE} --engine-version ${MYSQL_VERSION} --query '*[].DBInstanceClass' | grep db.t
 
@@ -136,17 +138,18 @@ Your RDS cluster will not be accessible from your local machine if you performed
     # When there are no reader instances, this points to the Writer.
     CLUSTER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].Endpoint' --output text)
     CLUSTER_READER_ENDPOINT=$(aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID} --query '*[].ReaderEndpoint' --output text)
+    echo ${CLUSTER_ENDPOINT},${CLUSTER_READER_ENDPOINT}
 
     # This will ensure the security group(s) for the cluster is appropriately configured
     nc -vz ${CLUSTER_ENDPOINT} 3306
 
     # This is an insecure means of connecting to MySQL by passing the password on the command line. Used only for cut/paste repeatable demonstration purposes.
-    docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
-    docker run -it --rm mysql mysql -h${CLUSTER_READER_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
+    docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
+    docker run -it --rm mysql mysql -h${CLUSTER_READER_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
     # Each Instance within a cluster has an endpoint. While your application should use cluster endpoints, this endpoint is useful for monitoring
     INSTANCE_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].Endpoint.Address' --output text)
-    docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${MYSQL_USER} -p${MYSQL_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
+    docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
 ## Example validation output
 
@@ -445,16 +448,18 @@ The most common issue is the inability to connect to the cluster with the mysql 
 
 RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is not covered by the free tier. It is always wise to remove resources when only used for testing purposes.
 
+## Validate existing resources
     aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID}
     aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID}
     aws ec2 describe-security-groups --filters Name=group-name,Values=${SG_NAME}
     aws rds describe-db-subnet-groups  --db-subnet-group-name ${SUBNET_GROUP}
 
 
-
+## Remove Instance
     aws rds delete-db-instance --db-instance-identifier ${INSTANCE_ID}
-    aws rds wait db-instance-deleted --db-instance-identifier ${INSTANCE_ID}
+    time aws rds wait db-instance-deleted --db-instance-identifier ${INSTANCE_ID}
 
+## Remove Cluster
     # While not advisable to skip the final snapshot when deleting a cluster, this has an incurred cost and for testing purposes we do not need this
     aws rds delete-db-cluster --db-cluster-identifier ${CLUSTER_ID} --skip-final-snapshot
 
@@ -466,8 +471,10 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
       sleep 3
     done
 
+## Remove unused related resources
     aws rds delete-db-subnet-group --db-subnet-group-name ${SUBNET_GROUP}
 
+For the purposes of this example we do not remove the security group. This also does not incur an ongoing cost.
 
 # References
 
@@ -489,7 +496,9 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 
 
 ## Remove RDS Aurora Cluster resources
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/delete-db-instance.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/delete-db-cluster.html
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/delete-db-subnet-group.html
 
 ## KMS
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/kms/list-keys.html
