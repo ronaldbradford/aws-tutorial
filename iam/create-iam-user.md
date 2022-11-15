@@ -9,7 +9,9 @@ This example assumes you have created an <a href="verify-administrator-user.md">
     IAM_USER="rdsdemo"
     IAM_GROUP="rds-group-access"
 
-    # Identify an appropriate policy by `aws iam list-policies --scope AWS`
+    # Identify an appropriate RDS policy
+    aws iam list-policies --scope AWS --query 'Policies[*].[PolicyName,Arn]' --output text | grep RDS
+
     # In this example we are granting access manage RDS resources
     RDS_POLICY_ARN="arn:aws:iam::aws:policy/AmazonRDSFullAccess"
 
@@ -43,23 +45,27 @@ You should be able to validate the new IAM user and the access credentials in a 
     IAM_USER="rdsdemo"
     export AWS_ACCESS_KEY_ID=$(jq -r .AccessKey.AccessKeyId ~/${IAM_USER}.access.json)
     export AWS_SECRET_ACCESS_KEY=$(jq -r .AccessKey.SecretAccessKey ~/${IAM_USER}.access.json)
+    export AWS_DEFAULT_REGION=us-east-2 # Workaround
     aws sts get-caller-identity
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
 
-The new IAM user access credentials should be added accordingly to a necessary configuration for later usage. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> provides information for adding this to <code>~/.aws/credentials</code>. 
+The new IAM user access credentials should be added accordingly to a necessary configuration for later usage. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> provides information for adding this to <code>~/.aws/credentials</code>.
 
 This is one approach to configure these settings
 
     echo "
     [${IAM_USER}]
+    region=${AWS_DEFAULT_REGION}
     aws_access_key_id=${AWS_ACCESS_KEY_ID}
     aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
 
     # Reset any current session settings
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
-    rm ~/${IAM_USER}.access.json
+    unset AWS_DEFAULT_REGION
+    unset AWS_PROFILE
+    rm -f ~/${IAM_USER}.access.json
     env | grep AWS
 
     # Test the new awscli profile
@@ -73,11 +79,9 @@ The following configuration is used in these tutorials when creating RDS resourc
     $ cat ~/.aws/credentials
 
     [rdsdemo]
+    region=us-east-2
     aws_access_key_id=XXXXXXXXXXXXXXXXX
     aws_secret_access_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    region=us-east-2
-    output=json
-    cli_pager=cat
 
 
 ## Teardown
@@ -90,6 +94,86 @@ The following commands will remove the IAM resources created in this tutorial, a
     aws iam delete-user --user-name ${IAM_USER}
     aws iam detach-group-policy --group-name ${IAM_GROUP} --policy-arn ${RDS_POLICY_ARN}
     aws iam delete-group --group-name ${IAM_GROUP}
+
+
+# Example Output
+
+## aws iam list-policies
+    AmazonRDSFullAccess	arn:aws:iam::aws:policy/AmazonRDSFullAccess
+    AmazonRDSDirectoryServiceAccess	arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess
+    AmazonRDSServiceRolePolicy	arn:aws:iam::aws:policy/aws-service-role/AmazonRDSServiceRolePolicy
+    RDSCloudHsmAuthorizationRole	ar77n:aws:iam::aws:policy/service-role/RDSCloudHsmAuthorizationRole
+    AmazonRDSPreviewServiceRolePolicy	arn:aws:iam::aws:policy/aws-service-role/AmazonRDSPreviewServiceRolePolicy
+    AmazonRDSBetaServiceRolePolicy	arn:aws:iam::aws:policy/aws-service-role/AmazonRDSBetaServiceRolePolicy
+    AmazonRDSDataFullAccess	arn:aws:iam::aws:policy/AmazonRDSDataFullAccess
+    AWSApplicationAutoscalingRDSClusterPolicy	arn:aws:iam::aws:policy/aws-service-role/AWSApplicationAutoscalingRDSClusterPolicy
+    AmazonRDSReadOnlyAccess	arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
+    AWSQuickSightDescribeRDS	arn:aws:iam::aws:policy/service-role/AWSQuickSightDescribeRDS
+    AmazonRDSEnhancedMonitoringRole	arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+    AmazonRDSCustomPreviewServiceRolePolicy	arn:aws:iam::aws:policy/aws-service-role/AmazonRDSCustomPreviewServiceRolePolicy
+    AmazonRDSCustomServiceRolePolicy	arn:aws:iam::aws:policy/aws-service-role/AmazonRDSCustomServiceRolePolicy
+    AWSElasticBeanstalkRoleRDS	arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkRoleRDS
+    AWSFaultInjectionSimulatorRDSAccess	arn:aws:iam::aws:policy/service-role/AWSFaultInjectionSimulatorRDSAccess
+    AmazonRDSPerformanceInsightsReadOnly	arn:aws:iam::aws:policy/AmazonRDSPerformanceInsightsReadOnly
+
+
+## aws iam create-group
+
+    {
+        "Group": {
+            "Path": "/",
+            "GroupName": "rds-group-access",
+            "GroupId": "AGPAVFZSAHXLNRUDAWBO7",
+            "Arn": "arn:aws:iam::999999999999:group/rds-group-access",
+            "CreateDate": "2022-11-15T15:21:07+00:00"
+        }
+    }
+
+## aws iam attach-group-policy
+
+    Does not offer output
+
+## aws iam list-attached-group-policies
+
+    {
+        "AttachedPolicies": [
+            {
+                "PolicyName": "AmazonRDSFullAccess",
+                "PolicyArn": "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+            }
+        ]
+    }
+
+## aws iam create-user
+
+    {
+        "User": {
+            "Path": "/",
+            "UserName": "rdsdemo",
+            "UserId": "AIDAVFZSAHXLGVPZQ3GMX",
+            "Arn": "arn:aws:iam::999999999999:user/rdsdemo",
+            "CreateDate": "2022-11-15T15:23:49+00:00"
+        }
+    }
+## aws iam list-groups-for-user
+
+    {
+        "Groups": [
+            {
+                "Path": "/",
+                "GroupName": "rds-group-access",
+                "GroupId": "AGPAVFZSAHXLNRUDAWBO7",
+                "Arn": "arn:aws:iam::999999999999:group/rds-group-access",
+                "CreateDate": "2022-11-15T15:21:07+00:00"
+            }
+        ]
+    }
+
+## aws rds describe-db-clusters
+
+    {
+        "DBClusters": []
+    }
 
 
 # References
