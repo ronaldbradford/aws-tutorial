@@ -3,8 +3,8 @@
 Having created an RDS Aurora Cluster, for example <a href="create-mysql-aurora-cluster">here</a> there are several common administrative operations.
 These would include:
 
-- <a href="aurora-logs.md">How to review your database logs</a>
-- <a href="mysql-aurora-events.md">Monitor database events</a>
+- <a href="aurora-logs.md">How to review your Aurora database logs</a>
+- <a href="aurora-events.md">Monitor Aurora database events</a>
 - <a href="create-aurora-snapshot.md">How to create a cluster snapshot</a>
 - How to test your cluster snapshot
 - <a href="mysql-aurora-minor-upgrade.md">How to perform a minor upgrade</a>
