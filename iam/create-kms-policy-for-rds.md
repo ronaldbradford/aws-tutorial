@@ -1,10 +1,20 @@
 # Create an IAM Policy to manage KMS resources
 
-In this tutorial we will create an IAM policy an attach this to the created `rds-group-access` as described in <a href="create-iam-user.md">Create a new IAM User</a>. This will enable an IAM user that has permissions to manage RDS resources also be able to
+In this tutorial we will create an IAM policy an attach this to the created `rds-group-access` as described in <a href="create-iam-user.md">Create a new IAM User</a>. This will enable an IAM user that has permissions to manage RDS resources also be able to use KMS and CMK keys.
+
+This example assumes you have created an <a href="verify-administrator-user.md">Administrator IAM user</a> or similar user with IAM create privilege capability for your AWS Account.
+
+## Select AWS user with IAM create privileges
+
+    export AWS_PROFILE=administrator
+    aws sts get-caller-identity
 
 
 ## New IAM Policy JSON data
-    # rds-kms-policy.json
+    wget https://gist.githubusercontent.com/ronaldbradford/72a56e24571079cbd0255fe34c0c29e8/raw/167d4b767e77ffb0c5ee561aff0ce74d886efcd3/rds-kms-policy.json
+    jq . rds-kms-policy.json
+
+## rds-kms-policy.json    
     {
       "Version": "2012-10-17",
       "Statement": {
@@ -23,7 +33,10 @@ In this tutorial we will create an IAM policy an attach this to the created `rds
     IAM_KMS_POLICY="rds-kms-policy"
 
     aws iam create-policy --policy-name ${IAM_KMS_POLICY} --policy-document file://${IAM_KMS_POLICY}.json
-    aws iam attach-group-policy --group-name ${IAM_GROUP} --policy-arn arn:aws:iam::999999999999:policy/${IAM_KMS_POLICY}
+    ACCOUNT=$(aws sts get-caller-identity | jq -r .Account)
+
+    #This command produces no output
+    aws iam attach-group-policy --group-name ${IAM_GROUP} --policy-arn arn:aws:iam::${ACCOUNT}:policy/${IAM_KMS_POLICY}
     aws iam list-attached-group-policies --group-name ${IAM_GROUP}
 
 
