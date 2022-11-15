@@ -1,5 +1,15 @@
 # Create Security Group for RDS Aurora
 
+This tutorial will create a Security Group that will allow ingress/egress of Aurora traffic (MySQL - 3306, PostgreSQL - 5432) within the given VPC for the region you are using. It will also create a separate Security Group that will allow SSH ingress from your present IP.
+
+This example assumes you have created an <a href="verify-administrator-user.md">Administrator IAM user</a> or similar user with EC2 privilege capability for your AWS Account.
+
+## Select AWS user with appropriate EC2 privileges
+
+    export AWS_PROFILE=administrator
+    aws sts get-caller-identity
+
+
 ## RDS Cluster Security Group
 
 This example will create a security group for use with RDS Aurora Clusters (MySQL & PostgreSQL)
@@ -32,13 +42,13 @@ It is not required to create egress rules as by default an egress rule with full
 
     aws ec2 authorize-security-group-egress --group-id ${SG_ID} --protocol tcp --port 3306 --cidr ${SG_CIDR}
     aws ec2 authorize-security-group-egress --group-id ${SG_ID} --protocol tcp --port 5432 --cidr ${SG_CIDR}
-    aws ec2 describe-security-groups --group-ids ${SG_ID
+    aws ec2 describe-security-groups --group-ids ${SG_ID}
 
 
 
 ## EC2 Instance for RDS Cluster
 
-An RDS cluster is created within a VPC. While it is technically possible to enable public access, this is not Well-Architected Framework Security best practice. This is a VPC security group that enables SSH ingres from your current IPV4 address.
+An RDS cluster is created within a VPC. While it is technically possible to enable public access, this is not Well-Architected Framework Security best practice. This is a security group within your VPC that enables SSH ingress from your current IPV4 address (for example a bastian instance).
 
 
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
