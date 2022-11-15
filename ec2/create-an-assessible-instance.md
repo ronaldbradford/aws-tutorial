@@ -1,6 +1,6 @@
 # Create an Internet Accessible EC2 Instance
 
-In this example we will create an EC2 Instance accessible from your current Internet IPV4 address that can be used to create and manage RDS resources.
+In this example we will create an EC2 Instance accessible from your current Internet IPV4 address that can be used to create and manage RDS resources. This tutorial requires the creation of the <a href="create-rds-security-group.md">RDS Security Group</a> that enables access from your local IP.
 
 ## Required configurable parameters
 
@@ -27,6 +27,7 @@ In this example we will create an EC2 Instance accessible from your current Inte
       chmod 400 ${KEYPAIR_PRIVATE_KEY}
       ssh-keygen -f ${KEYPAIR_PRIVATE_KEY} -l
     fi
+    ls -l ${HOME}/.ssh/id_aws_${KEYPAIR}*
 
     # This assumes a single VPC setup with single subnets per AZ
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
@@ -46,18 +47,43 @@ In this example we will create an EC2 Instance accessible from your current Inte
     nc -vz ${IP} 22
     ssh -i ${KEYPAIR_PRIVATE_KEY} -o "StrictHostKeyChecking=no" ec2-user@${IP} uptime
 
+## Automate Local Access to ec2 instance
+
+Using your local ssh configuration you can create a shortcut host with all the requirements defined within the config file. This is one example approach.
+
+    SSH_CONFIG=${HOME}/.ssh/config
+    touch ${SSH_CONFIG}
+    AWS_SSH_DIR=${HOME}/.ssh/aws
+    mkdir -p ${AWS_SSH_DIR}
+    [[ $(grep -c "Include aws" ${SSH_CONFIG}) -eq 0 ]] && echo "Include aws/*" >> ${SSH_CONFIG}
+
+    echo "Host ec2
+      Hostname ${IP}
+      User ec2-user
+      Port 22
+      UserKnownHostsFile /dev/null
+      StrictHostKeyChecking no
+      PasswordAuthentication no
+      IdentityFile ${KEYPAIR_PRIVATE_KEY}
+      IdentitiesOnly yes
+      LogLevel ERROR" > ${AWS_SSH_DIR}/ec2
+
+    ssh ec2 uptime
+
 ## Additional Instance Setup
 
 The following is additional setup performed on the EC2 instance that is used for later tutorials.
 
+    sudo yum update -y
     sudo yum install -y jq nc pigz
     sudo amazon-linux-extras install -y docker
     sudo service docker start
     sudo usermod -a -G docker ec2-user
     newgrp docker
+    id
 
     mkdir -p ${HOME}/.aws
-    # NOTE: Add your specific crendentials here
+    # NOTE: Add your specific credentials here
     echo "[rdsdemo] ..." > .aws/credentials
     export AWS_PROFILE=rdsdemo
     aws rds describe-db-clusters
