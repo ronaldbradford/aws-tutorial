@@ -141,7 +141,8 @@ Your RDS cluster will not be accessible from your local machine if you performed
     echo ${CLUSTER_ENDPOINT},${CLUSTER_READER_ENDPOINT}
 
     # This will ensure the security group(s) for the cluster is appropriately configured
-    nc -vz ${CLUSTER_ENDPOINT} 3306
+    PORT="3306"
+    nc -vz ${CLUSTER_ENDPOINT} ${PORT}
 
     # This is an insecure means of connecting to MySQL by passing the password on the command line. Used only for cut/paste repeatable demonstration purposes.
     docker run -it --rm mysql mysql -h${CLUSTER_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
@@ -151,13 +152,39 @@ Your RDS cluster will not be accessible from your local machine if you performed
     INSTANCE_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier ${INSTANCE_ID} --query '*[].Endpoint.Address' --output text)
     docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT @@aurora_server_id,  @@aurora_version, VERSION(), USER(), @@innodb_read_only;"
 
-## Example validation output
+
+## Example validation output (MySQL)
 
     +-------------------------+------------------+-----------+-------------------+--------------------+
     | @@aurora_server_id      | @@aurora_version | VERSION() | USER()            | @@innodb_read_only |
     +-------------------------+------------------+-----------+-------------------+--------------------+
     | rds-aurora-mysql-demo-0 | 2.10.0           | 5.7.12    | dba@172.31.39.139 |                  0 |
     +-------------------------+------------------+-----------+-------------------+--------------------+
+
+## Launching a PostgreSQL Aurora Cluster
+
+While the purpose and title of this tutorial is to launch a MySQL cluster, with the following change in the creation steps, you can launch a PostgreSQL cluster.
+
+    ENGINE="aurora-postgres"
+
+
+With the following port and syntax, you can verify the launched Aurora PostgresSQL cluster.
+
+    PORT=5432
+
+    docker run -it --rm postgres psql -h${CLUSTER_ENDPOINT} -U${DBA_USER} -dpostgres
+
+    docker run -it --rm postgres psql postgresql://${DBA_USER}:${DBA_PASSWD}@${CLUSTER_ENDPOINT}:${PORT}/postgres -c "SELECT server_id,version(), current_user, current_database() from aurora_replica_status();"
+
+## Example validation output (PostgreSQL)
+
+    server_id           |                                             version
+    | current_user | current_database
+    ------------------------------+----------------------------------------------------------------------------------------
+    ---------+--------------+------------------
+    rds-aurora-postgresql-demo-0 | PostgreSQL 14.5 on x86_64-pc-linux-gnu, compiled by x86_64-pc-linux-gnu-gcc (GCC) 7.4.0
+    , 64-bit | dba          | postgres
+
 
 # Next Steps
 
