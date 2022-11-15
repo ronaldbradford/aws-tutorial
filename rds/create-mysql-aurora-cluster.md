@@ -43,7 +43,10 @@ It is possible to execute the setup of the RDS cluster from your local machine. 
 
     # Necessary configuration to create an example RDS cluster
     ENGINE="aurora-mysql"
-    MYSQL_VERSION="5.7.mysql_aurora.2.10.0" # Not required, but needed for Well-Architected Framework
+
+    # Look at possible versions for engine
+    aws rds describe-db-engine-versions --engine ${ENGINE} --query '*[].EngineVersion' --output text
+    MYSQL_VERSION=$(aws rds describe-db-engine-versions --engine ${ENGINE} --query '*[].EngineVersion' --output text | awk '{print $NF}') # Not required, but needed for Well-Architected Framework
     INSTANCE_TYPE="db.t2.small"  # THIS IS NOT part of the AWS Free Tier
     CLUSTER_ID="rds-aurora-mysql-demo"
     INSTANCE_ID="${CLUSTER_ID}-0"
@@ -159,6 +162,44 @@ The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora clus
 
 # Example Output
 
+## aws rds describe-db-engine-versions --engine aurora-mysql
+
+    {
+        "DBEngineVersions": [
+            {
+                "Engine": "aurora-mysql",
+                "EngineVersion": "5.7.mysql_aurora.2.04.0",
+                "DBParameterGroupFamily": "aurora-mysql5.7",
+                "DBEngineDescription": "Aurora MySQL",
+                "DBEngineVersionDescription": "Aurora (MySQL 5.7) 2.04.0",
+                "ValidUpgradeTarget": [
+                    {
+                        "Engine": "aurora-mysql",
+                        "EngineVersion": "5.7.mysql_aurora.2.04.1",
+                        "Description": "RDS Aurora (MySQL)",
+                        "AutoUpgrade": false,
+                        "IsMajorVersionUpgrade": false,
+                        "SupportedEngineModes": [
+                            "provisioned"
+                        ],
+                        "SupportsParallelQuery": false,
+                        "SupportsGlobalDatabases": false,
+                        "SupportsBabelfish": false
+                    },
+                    {
+                        "Engine": "aurora-mysql",
+                        "EngineVersion": "5.7.mysql_aurora.2.04.2",
+                        "Description": "RDS Aurora (MySQL)",
+                        "AutoUpgrade": false,
+                        "IsMajorVersionUpgrade": false,
+                        "SupportedEngineModes": [
+                            "provisioned"
+                        ],
+                        "SupportsParallelQuery": false,
+                        "SupportsGlobalDatabases": false,
+                        "SupportsBabelfish": false
+                    },
+
 ## rds describe-db-clusters
 
       $ aws rds describe-db-clusters --db-cluster-identifier ${CLUSTER_ID}
@@ -220,6 +261,7 @@ The tutorial <a href="mysql-aurora-cluster-common-commands.md">MySQL aurora clus
               }
           ]
       }
+
 ## rds describe-instances
     {
         "DBInstances": [
@@ -431,6 +473,7 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 
 ## awscli
 
+- https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-engine-versions.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-subnet-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-subnet-group.html
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster-parameter-group.html
