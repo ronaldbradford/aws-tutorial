@@ -3,14 +3,18 @@
 
 There is no ability to look at log files for the cluster. They are only available per cluster instance.
 
+    # List Log Files
     aws rds describe-db-log-files --db-instance-identifier ${INSTANCE_ID}
+
     # Note: if you do no specify --output text you will get the log in a JSON format
-    aws rds download-db-log-file-portion --db-instance-identifier ${INSTANCE_ID} --log-file-name error/mysql-error-running.log --output text
+    ERROR_LOG="error/mysql-error-running.log" # For MySQL variant
+    ERROR_LOG="error/postgres.log" # PostgreSQL
+    aws rds download-db-log-file-portion --db-instance-identifier ${INSTANCE_ID} --log-file-name ${ERROR_LOG} --output text
 
 
 # Example Output
 
-## rds describe-db-log-files
+## rds describe-db-log-files (MySQL)
 
     $ aws rds describe-db-log-files --db-instance-identifier ${INSTANCE_ID}
     {
@@ -42,6 +46,34 @@ There is no ability to look at log files for the cluster. They are only availabl
             }
         ]
     }
+
+## rds describe-db-log-files (PostgreSQL)
+
+    {
+        "DescribeDBLogFiles": [
+            {
+                "LastWritten": 1668544339598,
+                "LogFileName": "error/postgres.log",
+                "Size": 1635
+            },
+            {
+                "LastWritten": 1668544339602,
+                "LogFileName": "error/postgresql.log.2022-11-15-2024",
+                "Size": 8756
+            },
+            {
+                "LastWritten": 1668548605075,
+                "LogFileName": "error/postgresql.log.2022-11-15-2100",
+                "Size": 1958
+            },
+            {
+                "LastWritten": 1668549600175,
+                "LogFileName": "error/postgresql.log.2022-11-15-2200",
+                "Size": 0
+            }
+        ]
+    }
+
 
 # References
 - https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-log-files.html
