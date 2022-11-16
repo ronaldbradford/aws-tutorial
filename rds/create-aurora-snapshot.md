@@ -1,12 +1,17 @@
-# Create an Aurora Snapshot
+# Create an Aurora Manual Snapshot
+
+By default <a href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html">Aurora continiously backs up</a> your cluster.  In addition, Aurora will perform a daily automated snapshot retaining these for the specified backup retention period of your cluster (1 to 35 days, defaults to 1).
+
+Finally, when you delete a cluster, you have the option to optionally specify a final snapshot.
 
 ## Required parameters
+
     AWS_PROFILE=rdsdemo
     ENGINE="aurora-mysql" # or aurora-postgresql
     CLUSTER_ID="rds-${ENGINE}-demo"
     SNAPSHOT_ID="first-snapshot"
 
-## Perform a snapshot
+## Perform a manual snapshot
 
 
     aws rds create-db-cluster-snapshot --db-cluster-identifier ${CLUSTER_ID} --db-cluster-snapshot-identifier ${SNAPSHOT_ID}
@@ -24,8 +29,7 @@
     done
 
 
-# Example Output
-
+# Example Output (manual snapshot)
 ## rds create-db-cluster-snapshot
 
     {
@@ -124,6 +128,40 @@
         "SourceArn": "arn:aws:rds:us-east-2:414340713341:cluster-snapshot:first-snapshot"
     }
 
+# Example Output (automated snapshot)
+## aws rds describe-db-cluster-snapshots
+
+Note the primary difference is `SnapshotType`.
+
+    {
+        "DBClusterSnapshots": [
+            {
+                "Engine": "aurora-postgresql",
+                "SnapshotCreateTime": "2022-11-16T05:41:29.497Z",
+                "VpcId": "vpc-0a03225585506c531",
+                "DBClusterIdentifier": "rds-aurora-postgresql-demo",
+                "DBClusterSnapshotArn": "arn:aws:rds:us-east-2:356050288086:cluster-snapshot:rds:rds-aurora-postgresql-demo-2022-11-16-05-41",
+                "MasterUsername": "dba",
+                "LicenseModel": "postgresql-license",
+                "Status": "available",
+                "PercentProgress": 100,
+                "DBClusterSnapshotIdentifier": "rds:rds-aurora-postgresql-demo-2022-11-16-05-41",
+                "KmsKeyId": "arn:aws:kms:us-east-2:356050288086:key/bb8ec82d-9d37-40db-adbc-3dad3a7d7214",
+                "ClusterCreateTime": "2022-11-15T20:00:02.999Z",
+                "StorageEncrypted": true,
+                "AllocatedStorage": 0,
+                "EngineVersion": "14.5",
+                "SnapshotType": "automated",
+                "AvailabilityZones": [
+                    "us-east-2a",
+                    "us-east-2b",
+                    "us-east-2c"
+                ],
+                "IAMDatabaseAuthenticationEnabled": false,
+                "Port": 0
+            }
+        ]
+    }
 
 # Teardown
 
