@@ -9,7 +9,7 @@ An RDS cluster has a number of required AWS resources in order to be successfull
 <ul>
 <li>A VPC that has correctly configured subnets. <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a> provides an example setup.</li>
 <li>An IAM user with applicable privileges to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User</a></li>
-<li>An EC2 security group that enables Aurora cluster ingress (MySQL - 3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Security Group</a> for how to create this in your AWS account.</li>
+<li>An EC2 security group that enables Aurora cluster ingress (MySQL - 3306, PostgreSQL - 5432) within your VPC. See the tutorial <a href="../ec2/create-rds-security-group.md">Create RDS Aurora Security Group</a> for how to create this in your AWS account.</li>
 <li>A DB subnet group based on the applicable VPC subnets. Described in this tutorial.</li>
 <li>A cluster parameter group. AWS does provide a default that is used in this tutorial.</li>
 <li>An instance parameter group. AWS does provide a default that is used in this tutorial.</li>
@@ -28,7 +28,7 @@ While this example is designed to create an RDS cluster in the simplest way, som
 A subsequent tutorial will provide a number of better practices for creating a more robust and extensible RDS cluster.
 
 ## IAM user validation
-It is possible to execute the setup of the RDS cluster from your local machine. You will not be able to perform the validation of and use the cluster. For simplicity all installation is performed on an instance that can complete the tutorial.
+It is possible to execute the setup of the RDS cluster from your local machine. You will not be able to perform the validation of and use the Aurora cluster by default. For simplicity all installation is performed on an EC2 compute instance that can complete the tutorial and validate your setup.
 
     # Connect to EC2 Instance inside of VPC
     ssh ${IP}
@@ -501,7 +501,7 @@ RDS Cluster resources incur an operating cost, An RDS Aurora cluster instance is
 ## Remove unused related resources
     aws rds delete-db-subnet-group --db-subnet-group-name ${SUBNET_GROUP}
 
-For the purposes of this example we do not remove the security group. This also does not incur an ongoing cost.
+For the purposes of this example we do not remove the EC2 security group. This also does not incur an ongoing cost.
 
 # References
 
@@ -534,6 +534,7 @@ For the purposes of this example we do not remove the security group. This also 
 
 
 ## User Guide
+- https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.CreateInstance.html
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.DBInstanceClass.html
 - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.CreateVPC.html
