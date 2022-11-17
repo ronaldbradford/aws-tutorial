@@ -19,27 +19,29 @@ This repository provides several cut/paste reproducible tutorials to demonstrate
 
 ## Elastic Compute Cloud (EC2)
 - <a href="ec2/create-rds-security-group.md">Create a VPC Security Group for accessing RDS Aurora resource</a>
+- <a href="ec2/create-rds-instance-security-group.md">Create a VPC Security Group for accessing RDS Instance resources</a>
 - <a href="ec2/create-an-assessible-instance.md">Create an Internet accessible EC2 instance for accessing created AWS resources in your VPC</a>
 
 ## Key Management Service (KMS)
 - <a href="kms/create-cmk-for-rds.md">Create a Custom Managed Key (CMK) for your RDS clusters</a>
 
 ## Relational Database Service (RDS)
-- <a href="rds/create-mysql-aurora-cluster.md">Create a simple RDS Aurora MySQL cluster</a>
+- <a href="rds/create-mysql-aurora-cluster.md">Create a simple RDS Aurora MySQL or PostgreSQL cluster</a>
 - <a href="rds/mysql-aurora-cluster-common-commands.md">Aurora cluster common operations</a>
   - <a href="rds/aurora-logs.md">How to review your database logs</a>
   - <a href="rds/aurora-events.md">Monitor your database events</a>
   - <a href="rds/create-aurora-snapshot.md">How to create and delete cluster snapshots</a>
   - <a href="rds/mysql-aurora-minor-upgrade.md">How to perform a minor MySQL upgrade</a>
   - <a href="rds/mysql-aurora-major-upgrade.md">How to perform a major MySQL upgrade</a>
+  - <a href="rds/create-rds-instance.md">Create a simple RDS Instance</a>
 
 
 # Further References
 
 ## AWS Documentation
-- https://aws.amazon.com/getting-started/
-- https://aws.amazon.com/cli/
-- https://aws.amazon.com/free/
+- <a href="https://aws.amazon.com/getting-started/">Getting Started with AWS</a>
+- <a href="https://aws.amazon.com/cli/">AWS Command Line Interface</a>
+- <a href="https://aws.amazon.com/free/">AWS Free Tier</a>
 
 ## More about the author
 - https://github.com/ronaldbradford
