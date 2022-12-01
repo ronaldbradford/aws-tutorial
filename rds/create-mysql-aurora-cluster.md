@@ -538,6 +538,7 @@ For the purposes of this example we do not remove the EC2 security group. This a
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.DBInstanceClass.html
 - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html
 - https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.CreateVPC.html
+- https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/Welcome.html
 
 ## Iaas
 - https://the.error.expert/amazon-web-services/awscli/rds/
