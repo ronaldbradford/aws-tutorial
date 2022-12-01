@@ -33,7 +33,7 @@ This repository provides several cut/paste reproducible tutorials to demonstrate
   - <a href="rds/create-aurora-snapshot.md">How to create and delete cluster snapshots</a>
   - <a href="rds/mysql-aurora-minor-upgrade.md">How to perform a minor MySQL upgrade</a>
   - <a href="rds/mysql-aurora-major-upgrade.md">How to perform a major MySQL upgrade</a>
-  - <a href="rds/create-rds-instance.md">Create a simple RDS Instance</a>
+- <a href="rds/create-rds-instance.md">Create a simple RDS Instance</a>
 
 
 # Further References
