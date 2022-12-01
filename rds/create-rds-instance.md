@@ -9,7 +9,7 @@ An RDS instance has a number of required AWS resources in order to be successful
 <ul>
 <li>A VPC that has correctly configured subnets. <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html">Get started with Amazon VPC</a> provides an example setup.</li>
 <li>An IAM user with applicable privileges to create RDS resources. See the tutorial <a href="../iam/create-iam-user.md">Create a new IAM User</a></li>
-<li>An EC2 security group that enables RDS instance ingress (MySQL/MariaDB - 3306, PostgreSQL - 5432, SQL Server - 1433, Oracle - ???? ) within your VPC. See the tutorial <a href="../ec2/create-rds-instance-security-group.md">Create RDS Instance Security Group</a> for how to create this in your AWS account.</li>
+<li>An EC2 security group that enables RDS instance ingress (MySQL/MariaDB - 3306, PostgreSQL - 5432, SQL Server - 1433, Oracle - 1521) within your VPC. See the tutorial <a href="../ec2/create-rds-instance-security-group.md">Create RDS Instance Security Group</a> for how to create this in your AWS account.</li>
 <li>A DB subnet group based on the applicable VPC subnets. Described in this tutorial.</li>
 <li>An instance parameter group. AWS does provide a default that is used in this tutorial.</li>
 <li>A KMS Custom Managed Key (CMK). AWS does provide an RDS default KMS key that is used in this tutorial.</li>
@@ -91,7 +91,7 @@ RDS currently supports six different RDBMS products, each with multiple variants
 
 ## Oracle
     ENGINE="oracle-ee"  # oracle-se2, oracle-ee-cdb, oracle-se2-cdb
-    PORT="???"
+    PORT="1521"
     EXTRA_OPTIONS="???"
 
 
@@ -132,7 +132,7 @@ RDS currently supports six different RDBMS products, each with multiple variants
     # Create an RDS DB Subnet Group
     aws rds create-db-subnet-group \
         --db-subnet-group-name ${SUBNET_GROUP} \
-        --db-subnet-group-description "Subnets for ${CLUSTER_ID}" \
+        --db-subnet-group-description "Subnets for ${INSTANCE_ID}" \
         --subnet-ids "[${SUBNET_IDS}]"
     aws rds describe-db-subnet-groups  --db-subnet-group-name ${SUBNET_GROUP}
 
@@ -176,6 +176,8 @@ RDS currently supports six different RDBMS products, each with multiple variants
     if [[ "${ENGINE}" == "postgres" ]]; then
       # docker run -it --rm postgres psql -h${INSTANCE_ENDPOINT} -U${DBA_USER} -dpostgres
       docker run -it --rm postgres psql postgresql://${DBA_USER}:${DBA_PASSWD}@${INSTANCE_ENDPOINT}:${PORT}/postgres -c " SELECT version(), current_user, current_database();"
+    elif [[ "${ENGINE}" = "mysql"]; then
+      docker run -it --rm mysql mysql -h${INSTANCE_ENDPOINT} -u${DBA_USER} -p${DBA_PASSWD} -e "SELECT VERSION(), USER(), @@innodb_read_only;"
     elif [[ "${ENGINE}" ~= "sqlsserver"]; then
       docker run -it --rm mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd -S ${INSTANCE_ENDPOINT} -U ${DBA_USER} -P ${DBA_PASSWD} -Q "SELECT @@version, SERVERPROPERTY('productversion') AS productversion, SERVERPROPERTY ('productlevel') AS productlevel, SERVERPROPERTY ('edition') AS edition"
     fi
@@ -214,6 +216,11 @@ While not advisable to skip the final snapshot when deleting an instance, this h
 
 ## User Guide
 - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CreateDBInstance.html
+- Outposts https://aws.amazon.com/rds/outposts/
+
+### MySQL
+- https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MySQL.html
+- https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Concepts.VersionMgmt.html
 
 ### SQL Server
 - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html
