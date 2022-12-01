@@ -15,7 +15,9 @@ This example assumes you have created an <a href="verify-administrator-user.md">
 This example will create a security group for use with RDS Aurora Clusters (MySQL & PostgreSQL)
 
     # Input Parameters
-    SG_NAME="rds-aurora-sg"
+    SERVICE="rds"  # What we want to create SGs for
+
+    SG_NAME="${SERVICE}-aurora-sg"
     SG_CIDR=""   # If you do not specify a CIDR, the VPC CIDR block is used
 
     # This example assumes you have only 1 VPC for this account/region  
@@ -23,7 +25,7 @@ This example will create a security group for use with RDS Aurora Clusters (MySQ
     VPC_CIDR=$(aws ec2 describe-vpcs --query '*[0].CidrBlock' --output text)
     SG_CIDR=${SG_CIDR:-$VPC_CIDR}
 
-    OUTPUT=$(aws ec2 create-security-group --group-name ${SG_NAME} --description "RDS Aurora DB security group" --vpc-id ${VPC_ID})
+    OUTPUT=$(aws ec2 create-security-group --group-name ${SG_NAME} --description "${SERVICE} Aurora DB security group" --vpc-id ${VPC_ID})
     SG_ID=$(jq -r .GroupId <<< ${OUTPUT})
     aws ec2 describe-security-groups --group-ids ${SG_ID}
 
@@ -52,10 +54,10 @@ An RDS cluster is created within a VPC. While it is technically possible to enab
 
 
     VPC_ID=$(aws ec2 describe-vpcs --query '*[0].VpcId' --output text)
-    SG_NAME="ec2-rds-sg"
+    SG_NAME="ec2-${SERVICE}-sg"
     SG_CIDR="$(curl -s http://icanhazip.com)/32"
 
-    OUTPUT=$(aws ec2 create-security-group --group-name ${SG_NAME} --description "EC2 Instance for RDS Access" --vpc-id ${VPC_ID})
+    OUTPUT=$(aws ec2 create-security-group --group-name ${SG_NAME} --description "EC2 Instance for ${SERVICE} Access" --vpc-id ${VPC_ID})
     EC2_SG_ID=$(jq -r .GroupId <<< ${OUTPUT})
     aws ec2 describe-security-groups --group-ids ${EC2_SG_ID}
     aws ec2 authorize-security-group-ingress --group-id ${EC2_SG_ID} --protocol tcp --port 22 --cidr ${SG_CIDR}
