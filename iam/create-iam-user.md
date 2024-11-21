@@ -45,14 +45,14 @@ You should be able to validate the new IAM user and the access credentials in a 
     IAM_USER="rdsdemo"
     export AWS_ACCESS_KEY_ID=$(jq -r .AccessKey.AccessKeyId ~/${IAM_USER}.access.json)
     export AWS_SECRET_ACCESS_KEY=$(jq -r .AccessKey.SecretAccessKey ~/${IAM_USER}.access.json)
-    export AWS_DEFAULT_REGION=us-east-2 # Workaround
+    export AWS_DEFAULT_REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
     aws sts get-caller-identity
     aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'
     aws rds describe-db-clusters
 
-The new IAM user access credentials should be added accordingly to a necessary configuration for later usage. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> provides information for adding this to <code>~/.aws/credentials</code>.
+The new IAM user access credentials should be added to a necessary configuration for later usage. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">Configuration and credential file settings</a> provides information for adding this to <code>~/.aws/credentials</code>.
 
-This is one approach to configure these settings
+This is one approach to configuring these settings
 
     echo "
     [${IAM_USER}]
